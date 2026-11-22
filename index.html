@@ -1,0 +1,1267 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Wywiad">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#ffffff">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+<title>Wywiad lekarski Lab-NUK</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;800&display=swap" rel="stylesheet">
+<style>
+/* VOICE work: clinical, calm, used on an iPad at the bedside, tapped not typed
+   IDEA a paper "historia choroby" form where answers are ticked from printed options, blue ballpoint for marks, red only for allergy and gaps
+   PICTURE the form itself: ruled rows, +/− marks, rows of tappable option chips that open per question
+   COLOUR white paper, black ink, ballpoint blue #1d3fbb for chosen answers, red #c8102e for allergy/gaps
+   TYPE Public Sans 800 titles + Public Sans text
+   LAYOUT iPad landscape and portrait: section list left, form right; phone: sticky bar, scrolling section chips, one column */
+:root{color-scheme:light dark;--bg:light-dark(#ffffff,#0f1114);--ink:light-dark(#121417,#eceef1);--mute:light-dark(#585e68,#9ca3ad);--line:light-dark(#dfe2e7,#2c3038);--panel:light-dark(#f5f6f8,#171a1f);--pen:light-dark(#1d3fbb,#93a9ff);--penink:light-dark(#ffffff,#0f1114);--penbg:light-dark(#e9eeff,#1b2340);--red:light-dark(#c8102e,#ff7385);--redbg:light-dark(#fdebee,#3a1218)}
+:root[data-theme=light]{color-scheme:light}
+:root[data-theme=dark]{color-scheme:dark}
+*{box-sizing:border-box;min-width:0}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font:16px/1.5 "Public Sans",system-ui,-apple-system,sans-serif;overflow-x:clip;-webkit-text-size-adjust:100%;-webkit-tap-highlight-color:transparent}
+button,input,select,textarea{font:inherit;color:inherit}
+button{touch-action:manipulation}
+.top{position:sticky;top:0;z-index:5;background:var(--bg);border-bottom:1px solid var(--line);padding-top:env(safe-area-inset-top,0px)}
+.bar{display:flex;flex-wrap:wrap;align-items:center;gap:8px 16px;padding:10px max(16px,env(safe-area-inset-right,0px)) 8px max(16px,env(safe-area-inset-left,0px));max-width:1280px;margin:0 auto}
+.brand{display:flex;flex-direction:column;flex:1 1 200px}
+.brand b{font-weight:800;font-size:20px;letter-spacing:-.02em;line-height:1.1}
+.pt{font-size:14px;color:var(--mute)}
+.tabs{display:flex;gap:4px}
+.tabs button{border:1px solid var(--line);background:var(--bg);border-radius:999px;padding:8px 16px;min-height:44px;font-size:15px;cursor:pointer;flex:none}
+.tabs button[aria-current=true]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.prog{height:3px;background:var(--line)}
+.prog i{display:block;height:100%;background:var(--pen);width:0;transition:width .3s}
+.allergy{background:var(--red);color:#fff;font-weight:600;font-size:15px;padding:6px 16px;text-align:center}
+.wrap{max-width:1280px;margin:0 auto;padding:16px max(16px,env(safe-area-inset-right,0px)) calc(64px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
+.view{display:grid;gap:24px}
+.view[hidden]{display:none}
+#v-wywiad{grid-template-columns:230px minmax(0,1fr);align-items:start}
+.secnav{position:sticky;top:96px;display:flex;flex-direction:column;gap:2px;max-height:calc(100svh - 110px);overflow:auto;-webkit-overflow-scrolling:touch}
+.secnav button{flex:none;display:flex;justify-content:space-between;gap:8px;align-items:baseline;text-align:left;border:0;background:none;padding:9px 10px;border-radius:8px;cursor:pointer;font-size:15px;min-height:42px}
+.secnav button.sub{padding-left:22px}
+.secnav button[aria-current=true]{background:var(--panel);font-weight:600}
+.secnav .n{font-size:13px;color:var(--mute);white-space:nowrap;font-variant-numeric:tabular-nums}
+.secnav .n.full{color:var(--pen)}
+.secnav .gap{font-size:13px;color:var(--mute);padding:12px 10px 2px}
+h1{font-size:clamp(28px,4vw,40px);line-height:1.05;letter-spacing:-.02em;margin:0;font-weight:800;text-wrap:balance}
+h1 .en{display:block;font-size:16px;font-weight:500;color:var(--mute);letter-spacing:0;margin-top:6px}
+h2{font-size:20px;margin:28px 0 8px;letter-spacing:-.01em}
+h3{font-size:15px;font-weight:600;margin:24px 0 6px;color:var(--mute)}
+.lead{color:var(--mute);margin:8px 0 12px;max-width:70ch}
+.sechead{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:end;gap:12px;margin-bottom:8px}
+.row{border-top:1px solid var(--line);padding:10px 0;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 12px;align-items:start}
+.rows>.row:last-child{border-bottom:1px solid var(--line)}
+.lbbtn{border:0;background:none;text-align:left;padding:6px 0;cursor:pointer;min-height:44px}
+.lb{display:block}
+.lb.b{font-weight:600}
+.hint{display:block;color:var(--mute);font-size:14px;line-height:1.4;margin-top:2px;font-weight:400}
+.badge{display:inline-block;font-size:13px;font-weight:600;padding:1px 8px;border-radius:999px;margin-left:6px;vertical-align:1px;background:var(--panel);color:var(--mute);white-space:nowrap}
+.badge.must{background:var(--redbg);color:var(--red)}
+.yn{display:flex;gap:6px}
+.yn button{width:56px;height:48px;border-radius:12px;border:1.5px solid var(--line);background:var(--bg);font-size:22px;font-weight:600;cursor:pointer}
+.yn button.p[aria-pressed=true]{background:var(--pen);border-color:var(--pen);color:var(--penink)}
+.yn button.m[aria-pressed=true]{background:var(--mute);border-color:var(--mute);color:var(--bg)}
+.row.vp .lb{color:var(--pen)}
+.row.vm .lb{color:var(--mute)}
+.row.rf.vp .lb{color:var(--red)}
+.badge.rf{background:var(--redbg);color:var(--red)}
+.gonext{margin-top:4px}
+.calc{border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin:12px 0;display:grid;gap:10px}
+.chd{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:baseline;gap:4px 16px}
+.chd b{font-size:17px}
+.res{font-weight:800;font-size:24px;color:var(--pen);white-space:nowrap;font-variant-numeric:tabular-nums}
+.critl{display:grid;gap:6px}
+.crit{display:flex;justify-content:space-between;align-items:center;gap:12px;width:100%;text-align:left;border:1.5px solid var(--line);background:var(--bg);border-radius:10px;padding:10px 12px;min-height:48px;cursor:pointer}
+.crit[aria-pressed=true]{border-color:var(--pen);background:var(--penbg)}
+.crit .pts{font-weight:700;white-space:nowrap;font-variant-numeric:tabular-nums}
+.crit.auto{cursor:default;background:var(--panel)}
+.crit .hint{display:inline}
+.chint{display:block;font-size:14px;color:var(--mute);margin-top:2px;line-height:1.35}
+.chd a.btn{min-height:40px;padding:8px 14px;text-decoration:none;color:var(--ink);font-size:15px}
+.interp{margin:0;font-weight:600}
+.chip small{font-weight:400;opacity:.8}
+.chip:disabled{opacity:.55;cursor:default}
+.chip[aria-pressed=true]:disabled{opacity:1}
+.cwhere{margin:24px 0 -4px}
+.det{grid-column:1/-1;display:grid;gap:10px;padding:4px 0 6px}
+.det[hidden]{display:none}
+.cg{display:grid;grid-template-columns:150px minmax(0,1fr);gap:6px 12px;align-items:start}
+.cl{font-size:14px;color:var(--mute);padding-top:11px}
+.cl i{font-style:normal;font-weight:800;color:var(--ink);margin-right:4px}
+.cs{display:flex;flex-wrap:wrap;gap:6px}
+.cs.g3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));max-width:520px}
+.cs.nrs{display:grid;grid-template-columns:repeat(11,minmax(0,1fr));max-width:620px}
+.chip{border:1.5px solid var(--line);background:var(--bg);border-radius:999px;padding:9px 15px;min-height:44px;font-size:15px;line-height:1.2;cursor:pointer;text-align:center}
+.cs.g3 .chip,.cs.nrs .chip{border-radius:10px;padding:9px 6px}
+.chip[aria-pressed=true]{background:var(--pen);border-color:var(--pen);color:var(--penink);font-weight:600}
+.chip.add{border-style:dashed;color:var(--mute)}
+textarea,input[type=text],input[type=number],input[type=date],select{width:100%;font-size:16px;border:1px solid var(--line);border-radius:10px;padding:10px 12px;background:var(--bg);color:var(--pen);min-height:44px}
+textarea{min-height:56px;resize:vertical;line-height:1.45}
+textarea:focus,input:focus,select:focus,button:focus-visible{outline:2px solid var(--pen);outline-offset:1px}
+.notebtn{justify-self:start;border:0;background:none;color:var(--mute);font-size:14px;padding:8px 0;min-height:40px;cursor:pointer;text-decoration:underline;text-underline-offset:3px}
+label.f{display:grid;gap:4px;font-size:14px;color:var(--mute)}
+.flds{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px}
+.chk{display:grid;grid-template-columns:30px minmax(0,1fr);gap:10px;align-items:start;cursor:pointer;min-height:44px;padding:10px 0;border-top:1px solid var(--line)}
+.chk input{width:26px;height:26px;margin:0;accent-color:var(--pen)}
+.card{border:1px solid var(--line);border-radius:16px;padding:16px;margin:12px 0;background:var(--panel);display:grid;gap:12px}
+.card .hd{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.card .hd b{font-size:18px}
+.card .chip{background:var(--bg)}
+.card .chip[aria-pressed=true]{background:var(--pen)}
+.btn{border:1.5px solid var(--ink);background:var(--bg);border-radius:12px;padding:10px 16px;min-height:48px;font-weight:600;cursor:pointer}
+.btn.pri{background:var(--ink);color:var(--bg)}
+.btn.ghost{border-color:var(--line);font-weight:500}
+.btn.danger{border-color:var(--red);color:var(--red)}
+.btn.neg{border-color:var(--mute);color:var(--ink);font-weight:500}
+.btns{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:12px 0}
+.pager{display:flex;justify-content:space-between;gap:8px;margin-top:28px}
+.ent{border-top:1px solid var(--line);padding:12px 0;display:grid;gap:8px}
+.ent .top2{display:grid;grid-template-columns:minmax(0,2fr) minmax(0,1fr) auto;gap:8px;align-items:end}
+.py{font-size:15px;color:var(--pen);font-weight:600}
+.note{font-size:14px;color:var(--mute)}
+#sum{max-width:920px;min-height:40vh;font-size:16px;line-height:1.5;color:var(--ink);background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px 22px;outline:none}
+#sum:focus{outline:2px solid var(--pen);outline-offset:1px}
+#sum p{margin:4px 0}
+#sum .st{font-size:18px;margin-bottom:8px}
+#sum h3{font-size:16px;font-weight:800;color:var(--ink);margin:18px 0 6px;padding-top:12px;border-top:1px solid var(--line)}
+#sum ul,#sum ol{margin:4px 0 6px;padding-left:24px}
+#sum li{margin:2px 0}
+#sum .fl{background:var(--redbg);color:var(--red);padding:6px 10px;border-radius:8px;margin:6px 0}
+#sum .pos b{color:var(--pen)}
+#sum .neg{border-left:3px solid var(--mute);padding-left:12px;margin:8px 0}
+#sum .neg ul{columns:2 260px;column-gap:28px;list-style:'– ';padding-left:16px}
+#sum .neg li{break-inside:avoid}
+.miss{border:1.5px solid var(--red);background:var(--redbg);border-radius:12px;padding:12px 14px;margin:12px 0}
+.miss b{color:var(--red)}
+.miss ul{margin:6px 0 0;padding-left:20px}
+.ref{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,340px),1fr));gap:16px 32px}
+.ref section{border-top:2px solid var(--ink);padding-top:10px}
+.ref h2{margin-top:0}
+.ref dl{margin:0;display:grid;grid-template-columns:auto minmax(0,1fr);gap:6px 12px}
+.ref dt{font-weight:800}
+.ref dd{margin:0}
+.ref ul{margin:0;padding-left:18px}
+.ref li{margin:3px 0}
+.saved{border-top:1px solid var(--line);padding:12px 0;display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px;align-items:center}
+.saved .who{font-weight:600}
+.saved .when{font-size:14px;color:var(--mute)}
+.chips{display:none}
+@media(max-width:760px){
+#v-wywiad{grid-template-columns:minmax(0,1fr)}
+.secnav{display:none}
+.chips{display:flex;gap:6px;overflow-x:auto;position:sticky;top:var(--toph,100px);z-index:4;background:var(--bg);padding:8px 0;margin:-16px 0 0;scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
+.chips button{flex:none;border:1px solid var(--line);background:var(--bg);border-radius:999px;padding:6px 12px;min-height:40px;font-size:14px;cursor:pointer;white-space:nowrap}
+.chips button[aria-current=true]{background:var(--pen);color:var(--penink);border-color:var(--pen)}
+.chips button .n{opacity:.75;margin-left:4px;font-variant-numeric:tabular-nums}
+.tabs{overflow-x:auto;width:100%;scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tabs button{padding:6px 11px;min-height:40px;font-size:14px}
+.cg{grid-template-columns:minmax(0,1fr)}
+.cl{padding-top:0}
+.cs.nrs{grid-template-columns:repeat(6,minmax(0,1fr))}
+.ent .top2{grid-template-columns:minmax(0,1fr) auto}
+.ent .top2 label:nth-child(2){grid-column:1/-1;grid-row:2}
+}
+@media(prefers-reduced-motion:reduce){.prog i{transition:none}}
+</style>
+</head>
+<body>
+<header class="top" id="top">
+  <div class="bar">
+    <div class="brand"><b>Wywiad lekarski</b><span class="pt" id="pt">nowy wywiad</span></div>
+    <nav class="tabs" id="tabs" aria-label="Widoki">
+      <button data-v="wywiad" aria-current="true">Wywiad</button>
+      <button data-v="podsumowanie">Podsumowanie</button>
+      <button data-v="sciaga">Ściąga</button>
+      <button data-v="skale">Skale</button>
+      <button data-v="lista">Zapisane</button>
+    </nav>
+  </div>
+  <div class="prog" aria-hidden="true"><i id="progbar"></i></div>
+  <div class="allergy" id="allergy" hidden></div>
+</header>
+
+<main class="wrap">
+  <section class="view" id="v-wywiad">
+    <aside class="secnav" id="secnav" aria-label="Sekcje wywiadu"></aside>
+    <div>
+      <div class="chips" id="chips" aria-label="Sekcje wywiadu"></div>
+      <div id="sec"></div>
+    </div>
+  </section>
+
+  <section class="view" id="v-podsumowanie" hidden>
+    <div>
+      <h1>Podsumowanie wywiadu</h1>
+      <p class="lead">Tekst składa się sam z tego, co zaznaczysz. Możesz go tu poprawić przed skopiowaniem, ale poprawki nie wracają do formularza, a „Odśwież z formularza” je nadpisze. „Kopiuj prosty tekst” daje wiersz po wierszu, bez list i ramek, tylko z pogrubieniem i podkreśleniem. Formatowanie zostaje tam, gdzie pole je obsługuje (Word, Google Docs, edytory z formatowaniem); w polu czysto tekstowym znika, a „NEGUJE” zostaje wielkimi literami.</p>
+      <div id="missing"></div>
+      <div class="btns"><button class="btn pri" id="copy">Kopiuj z listami</button><button class="btn" id="copyflat">Kopiuj prosty tekst</button><button class="btn ghost" id="regen">Odśwież z formularza</button><span class="note" id="copied" role="status"></span></div>
+      <div id="sum" contenteditable="true" role="textbox" aria-multiline="true" aria-label="Tekst podsumowania" spellcheck="false"></div>
+    </div>
+  </section>
+
+  <section class="view" id="v-sciaga" hidden>
+    <div>
+      <h1>Ściąga do wywiadu</h1>
+      <p class="lead">Na podstawie skryptu Lab-NUK (Zakład Dydaktyki Medycznej UJ CM, wyd. VI, 2019). Skale NYHA i CCS to standardowe definicje spoza skryptu, bo skrypt tylko je wymienia.</p>
+      <div class="ref">
+        <section><h2>Kolejność wywiadu</h2><ul>
+          <li>Wprowadzenie: przedstaw się, wyjaśnij cel, zbierz dane, ustal powód zgłoszenia</li>
+          <li>Główne dolegliwości, każda osobno; potem podsumuj na głos</li>
+          <li>Początek i przebieg choroby</li>
+          <li>Najpierw układ, którego dotyczą skargi, potem krótko pozostałe</li>
+          <li>Leki, alergie</li><li>Czynności fizjologiczne i aspekty psychologiczne</li><li>Używki</li>
+          <li>Przebyte choroby, hospitalizacje, operacje</li><li>Wywiad środowiskowy</li><li>Wywiad rodzinny</li>
+          <li>Na koniec: czy pacjent chce coś dodać; potem badanie przedmiotowe</li></ul></section>
+        <section><h2>SOCRATES</h2><dl>
+          <dt>S</dt><dd>site, umiejscowienie</dd><dt>O</dt><dd>onset, początek</dd><dt>C</dt><dd>characteristics, charakter</dd><dt>R</dt><dd>radiation, promieniowanie</dd><dt>A</dt><dd>associated, objawy towarzyszące</dd><dt>T</dt><dd>timing, przebieg w czasie</dd><dt>E</dt><dd>exacerbating / alleviating, czynniki nasilające i łagodzące</dd><dt>S</dt><dd>severity, nasilenie</dd></dl></section>
+        <section><h2>Perspektywa pacjenta (illness)</h2><ul>
+          <li>Co myśli i wie o przyczynie problemu</li><li>Emocje, zwłaszcza obawy: czego konkretnie dotyczą</li><li>Oczekiwania wobec lekarza i opieki</li><li>Wpływ na pracę, dom, życie społeczne, role rodzinne</li><li>Wcześniejsze doświadczenia z podobną chorobą, własne lub w rodzinie</li><li>Co pacjent już zrobił: leki bez recepty, domowe sposoby</li></ul></section>
+        <section><h2>Techniki komunikacyjne</h2><dl>
+          <dt>Parafraza</dt><dd>Powtórz własnymi słowami, żeby sprawdzić, czy dobrze rozumiesz: „Dobrze zrozumiałem, że…?”</dd>
+          <dt>Klaryfikacja</dt><dd>Poproś o doprecyzowanie chaotycznej wypowiedzi.</dd>
+          <dt>Werbalizacja</dt><dd>Nazwij swój niepokój bez obwiniania, np. gdy pacjent nie stosuje zaleceń.</dd>
+          <dt>Podsumowanie</dt><dd>Regularnie zbieraj, co już wiesz; pokazuje, że słuchasz.</dd>
+          <dt>Screening</dt><dd>„Czy chce Pan/Pani coś jeszcze dodać?”</dd></dl></section>
+        <section><h2>Pytania</h2><ul>
+          <li><b>Zaczynaj od otwartych</b>, przechodź do zamkniętych</li><li>Pogłębiające: zachęcają do szczegółów</li><li>Alternatywne: dają do wyboru (tępy, ostry, palący?), ale zawężają odpowiedź</li><li>Refleksyjne: skłaniają do przemyślenia wcześniejszej odpowiedzi</li></ul>
+          <h3>Unikaj</h3><ul><li>Sugerujących („Już lepiej?”)</li><li>Obwiniających („Dlaczego Pan nadal pali?”)</li><li>Wieloczłonowych (kilka pytań naraz)</li><li>Zabronionych: oceniających lub poniżających pacjenta</li></ul></section>
+        <section><h2>NYHA (New York Heart Association)</h2><dl>
+          <dt>I</dt><dd>Bez ograniczeń; zwykły wysiłek nie powoduje objawów</dd><dt>II</dt><dd>Niewielkie ograniczenie; objawy przy zwykłym wysiłku, w spoczynku bez dolegliwości</dd><dt>III</dt><dd>Znaczne ograniczenie; objawy przy wysiłku mniejszym niż zwykły</dd><dt>IV</dt><dd>Objawy przy każdym wysiłku lub w spoczynku</dd></dl></section>
+        <section><h2>CCS (Canadian Cardiovascular Society)</h2><dl>
+          <dt>I</dt><dd>Dławica tylko przy dużym lub przedłużonym wysiłku</dd><dt>II</dt><dd>Niewielkie ograniczenie zwykłej aktywności, np. ból po przejściu ponad 200 m lub ponad 1 piętra</dd><dt>III</dt><dd>Znaczne ograniczenie: ból po 100–200 m lub 1 piętrze w zwykłym tempie</dd><dt>IV</dt><dd>Każda aktywność wywołuje ból; może występować w spoczynku</dd></dl></section>
+      </div>
+    </div>
+  </section>
+
+  <section class="view" id="v-skale" hidden>
+    <div>
+      <h1>Skale i kalkulatory</h1>
+      <p class="lead">Te same skale pojawiają się w wywiadzie ukierunkowanym przy pasujących objawach; wynik jest wspólny i trafia do podsumowania. Wiek i płeć wypełniają się z danych pacjenta. Kryteria z dopiskiem „badanie” lub „laboratorium” wymagają badania przedmiotowego albo wyników. Wybór skal i progi interpretacji są spoza skryptu Lab-NUK.</p>
+      <div id="calclist"></div>
+    </div>
+  </section>
+  <section class="view" id="v-lista" hidden>
+    <div>
+      <h1>Zapisane wywiady</h1>
+      <p class="lead">Zapisują się tylko w tej przeglądarce, na tym urządzeniu. Nie trafiają na żaden serwer ani do Claude. Przeglądarka może je kiedyś wyczyścić, więc gotowy wywiad skopiuj z zakładki Podsumowanie. Przy prawdziwych pacjentach wpisuj tylko inicjały.</p>
+      <div class="btns"><button class="btn pri" data-act="new">Nowy wywiad</button><button class="btn" data-act="export">Eksportuj wszystkie do pliku</button><button class="btn" data-act="import">Importuj z pliku</button><input type="file" id="impfile" accept="application/json,.json" hidden></div><p class="note" id="iomsg" role="status"></p>
+      <div id="savedlist"></div>
+      <h2>Kopia zapasowa i przenoszenie</h2>
+      <p class="note">Eksport zapisuje wszystkie wywiady z tego urządzenia w jednym pliku (np. w aplikacji Pliki albo przez AirDrop). Import dokłada wywiady z pliku; jeśli ten sam wywiad już jest, zostaje nowsza wersja. Plik zawiera dane pacjentów: przechowuj go tak jak dokumentację.</p>
+      <h2>Na ekranie początkowym iPada</h2>
+      <p class="note">Otwórz tę stronę w Safari, stuknij Udostępnij, potem „Do ekranu początkowego”. Po pierwszym otwarciu aplikacja działa też bez internetu.</p>
+      <p class="note" id="ver"></p>
+    </div>
+  </section>
+</main>
+
+<datalist id="dl-drugs"></datalist>
+
+<script>
+{
+const Q=(l,o,s,g)=>({l,o:o.split('|'),s:!!s,g:g||''});
+const Y=(id,t,h,b,x)=>Object.assign({id,t,h:h||'',b:!!b,k:'yn'},x||{});
+const C=(id,t,h,x)=>Object.assign({id,t,h:h||'',k:'chk'},x||{});
+const O=(id,t,h,q,x)=>Object.assign({id,t,h:h||'',k:'qo',q},x||{});
+const G=t=>({g:t});
+const ABD='prawe podżebrze|nadbrzusze|lewe podżebrze|prawa okolica boczna|okolica pępka|lewa okolica boczna|prawy dół biodrowy|podbrzusze|lewy dół biodrowy';
+const WHO='matka|ojciec|brat|siostra|syn|córka|dziadkowie';
+const FAGE='<50 r.ż.|50–65 r.ż.|>65 r.ż.|nie wie';
+const SIDE='prawa|lewa|obie';
+
+const SECTIONS=[
+ {id:'intro',t:'Wprowadzenie',en:'Introduction',sp:'intro',req:1,items:[
+  C('i1','Przedstawiłem się i przywitałem','imię i nazwisko, status zawodowy (np. student IV roku)',{b:1}),
+  C('i2','Wyjaśniłem cel rozmowy i uzyskałem zgodę','zgoda na wywiad i dalsze działania',{b:1}),
+  C('i3','Wyjaśniłem, że padną pytania pozornie niezwiązane z problemem','np. żeby mieć pełny obraz stanu zdrowia'),
+  C('i4','Zapoznałem się z dokumentacją medyczną','',{b:1}),
+  C('i5','W szpitalu: skierowanie, PESEL, osoba upoważniona do informacji','zależnie od miejsca zbierania wywiadu')]},
+ {id:'cc',t:'Główne dolegliwości',en:'Chief complaint',sp:'cc',req:1,items:[
+  C('cc1','Podsumowałem dolegliwości na głos i dałem możliwość korekty','',{b:1})]},
+ {id:'course',t:'Początek i przebieg',en:'History of present illness',req:1,items:[
+  Y('h1','Podobne objawy wcześniej','kiedykolwiek wcześniej',1,{q:[Q('Kiedy','<1 rok temu|1–5 lat temu|>5 lat temu|wielokrotnie')]}),
+  O('h2','Początek','nagły czy stopniowe narastanie',[Q('','nagły|stopniowy|nagły, potem narastanie',1)],{b:1}),
+  Y('h3','Zależność od pory dnia lub roku','cykliczne nawracanie',1,{q:[Q('Pora','rano|w ciągu dnia|wieczorem|w nocy|wiosną|latem|jesienią|zimą')]}),
+  Y('h4','Dotychczasowe leczenie i jego skuteczność','',1,{q:[Q('Leczenie','leki bez recepty|leki na receptę|antybiotyk|zabiegi|fizjoterapia|domowe sposoby'),Q('Skuteczność','pomogło|częściowo|nie pomogło',1)]})]},
+ {id:'ice',t:'Perspektywa pacjenta',en:'Illness perspective',items:[
+  O('p1','Myśli i przekonania o przyczynie','„Co Pan/Pani myśli, skąd to się bierze?”',[Q('','nie wie|infekcja|stres|przemęczenie|serce|żołądek|nowotwór|uraz|wiek')]),
+  O('p2','Obawy','czego konkretnie dotyczą',[Q('','nowotwór|zawał|udar|poważna choroba|ból|operacja|utrata pracy|opieka nad bliskimi|brak obaw')]),
+  O('p3','Oczekiwania wobec lekarza','',[Q('','rozpoznanie|badania|leki|skierowanie do specjalisty|zwolnienie lekarskie|zaświadczenie|uspokojenie|hospitalizacja')]),
+  O('p4','Wpływ na życie','„Czego nie może Pan zrobić teraz, a mógł wcześniej?”',[Q('','praca|sen|obowiązki domowe|opieka nad rodziną|aktywność fizyczna|życie towarzyskie|bez wpływu')]),
+  O('p5','Wcześniejsze doświadczenia','własne lub w rodzinie',[Q('','podobna choroba wcześniej|choroba w rodzinie|złe doświadczenia z leczeniem|brak')]),
+  O('p6','Co już zrobił sam','',[Q('','leki przeciwbólowe bez recepty|leki przeciwgorączkowe|zioła|domowe sposoby|odpoczynek|zmiana diety|inny lekarz|nic')])]},
+ {gap:'Układy, najpierw ten od skarg'},
+ {id:'cv',t:'Układ krążenia',en:'Cardiovascular system',sys:1,items:[
+  Y('c1','Ból w klatce piersiowej, za mostkiem','koniecznie zapytaj o reakcję na nitroglicerynę',1,{q:[Q('Charakter','uciskający|gniotący|piekący|kłujący|przeszywający|rozdzierający|nieokreślony'),Q('Promieniowanie','lewe ramię|prawe ramię|żuchwa|szyja|plecy|między łopatki|nadbrzusze|brak'),Q('Czas trwania','sekundy|<5 min|5–20 min|>20 min|stały',1),Q('Wywołuje','wysiłek|stres|zimno|posiłek|oddychanie|ucisk|w spoczynku'),Q('Nitrogliceryna','ustępuje w <5 min|nie ustępuje|nie stosował',1),Q('Towarzyszące','duszność|poty|nudności|kołatanie|zawroty|omdlenie|lęk'),Q('CCS (Canadian Cardiovascular Society)','I|II|III|IV',1)]}),
+  Y('c2','Kołatanie serca','poproś o wystukanie rytmu na stole',1,{q:[Q('Rytm','miarowe|niemiarowe|nie wie',1),Q('Jak często','codziennie|kilka razy w tygodniu|rzadziej|jednorazowo',1),Q('Czas','sekundy|minuty|godziny',1),Q('Wywołuje','wysiłek|stres|kawa|alkohol|spoczynek|bez przyczyny'),Q('Towarzyszące','zawroty|omdlenie|duszność|ból w klatce')]}),
+  Y('c3','Duszność wysiłkowa, spoczynkowa','wielkość wysiłku w piętrach',1,{q:[Q('Kiedy','przy wysiłku|w spoczynku|w nocy, budzi ze snu|w pozycji leżącej'),Q('Po ilu piętrach','<1 piętro|1 piętro|2 piętra|>2 piętra|na płaskim terenie',1),Q('NYHA (New York Heart Association)','I|II|III|IV',1)]}),
+  Y('c4','Oddawanie moczu w nocy','',1,{q:[Q('Ile razy','1×|2×|3×|>3×',1),Q('Kiedy','na początku nocy|nad ranem',1)]}),
+  Y('c5','Obrzęki wokół kostek, na podudziach','',1,{q:[Q('Gdzie','kostki|podudzia|całe kończyny|jednostronnie|symetrycznie'),Q('Kiedy','wieczorem|rano|stale|w upały')]}),
+  Y('c6','Bóle łydek podczas chodzenia','',1,{q:[Q('Dystans','<50 m|50–200 m|200–500 m|>500 m',1),Q('Ustępuje po odpoczynku','<2 min|2–10 min|>10 min',1),Q('Strona',SIDE,1)]}),
+  Y('c7','Potrzeba przyjmowania określonej pozycji','',1,{q:[Q('Pozycja','siedząca|z uniesionym tułowiem|na boku|pochylona do przodu',1),Q('Poduszki','1|2|3 i więcej',1)]}),
+  Y('c8','Zaburzenia oddychania w czasie snu','',1,{q:[Q('','chrapanie|bezdechy zauważone przez bliskich|napadowa duszność nocna|senność w dzień')]}),
+  Y('c9','Żylaki podudzi','',1,{q:[Q('Strona',SIDE,1),Q('','leczone operacyjnie|owrzodzenia')]}),
+  Y('c10','Zimne dłonie lub stopy','',1,{q:[Q('Gdzie','dłonie|stopy'),Q('Wygląd','bladość|sinica|zaczerwienienie|zmiana barw (objaw Raynauda)')]}),
+  Y('c11','Zawroty głowy, zasłabnięcia, omdlenia','',1,{q:[Q('Rodzaj','zawroty|zasłabnięcie|omdlenie z utratą przytomności'),Q('Okoliczności','przy wstawaniu (ortostatyczne)|przy wysiłku|w spoczynku|po posiłku|przy kaszlu|przy mikcji')]}),
+  G('Zapytaj również o'),
+  Y('c12','Zawał serca w przeszłości','',0,{q:[Q('Kiedy','<1 rok|1–5 lat|>5 lat',1),Q('Leczenie','PCI (przezskórna interwencja wieńcowa)|CABG (pomostowanie aortalno-wieńcowe)|zachowawcze')]}),
+  Y('c13','Nadciśnienie tętnicze','',0,{q:[Q('Maks. ciśnienie (mmHg)','140–159|160–179|180–199|≥200|nie wie',1),Q('Od','<1 roku|1–5 lat|5–10 lat|>10 lat',1),Q('Leczone','tak|nie',1)]}),
+  Y('c14','Zaburzenia rytmu serca','',0,{q:[Q('','migotanie przedsionków|inne|nie wie|rozrusznik|ICD (kardiowerter-defibrylator)|leczenie przeciwkrzepliwe')]}),
+  Y('c15','Rozpoznane wady zastawek serca','',0,{q:[Q('','aortalna|mitralna|inna|nie wie|sztuczna zastawka')]}),
+  Y('c16','Badania lub leki w związku z tymi dolegliwościami','',0,{q:[Q('','EKG (elektrokardiografia)|echo serca|Holter|próba wysiłkowa|koronarografia|leki')]})]},
+ {id:'resp',t:'Układ oddechowy',en:'Respiratory system',sys:1,items:[
+  Y('r1','Duszność','zob. też układ krążenia',1,{q:[Q('Kiedy','przy wysiłku|w spoczynku|w nocy|napadowo'),Q('Po ilu piętrach','<1 piętro|1 piętro|2 piętra|>2 piętra',1)]}),
+  Y('r2','Kaszel','',1,{q:[Q('Typ','suchy|wilgotny',1),Q('Od','<3 tyg.|3–8 tyg.|>8 tyg.',1),Q('Kiedy','rano|w nocy|cały dzień|po wysiłku|po posiłku'),Q('Plwocina','śluzowa, biała|ropna, żółto-zielona|z krwią|pienista, różowa|rdzawa'),Q('Ilość plwociny','łyżeczka|łyżka|>pół szklanki dziennie',1)]}),
+  Y('r3','Świsty przy oddychaniu','',1,{q:[Q('Kiedy','przy wydechu|przy wdechu|w nocy|przy wysiłku|po kontakcie z alergenem')]}),
+  Y('r4','Ból podczas oddychania','',1,{q:[Q('Gdzie','prawa strona|lewa strona|za mostkiem|obustronnie'),Q('Nasila','wdech|kaszel|ruch|ucisk')]}),
+  Y('r5','Ból gardła, chrypka','',1,{q:[Q('','ból gardła|chrypka|ból przy przełykaniu'),Q('Od','<1 tydz.|1–3 tyg.|>3 tyg.',1)]}),
+  Y('r6','Ból uszu','',1,{q:[Q('Strona','prawe|lewe|oba',1),Q('','wyciek|niedosłuch|szumy')]}),
+  Y('r7','Palenie papierosów','szczegóły w sekcji Używki',1),
+  Y('r8','Podobne dolegliwości u współmieszkańców','',1,{q:[Q('','domownicy|współpracownicy|dzieci w żłobku lub szkole')]}),
+  Y('r9','Zwierzęta domowe, klimatyzacja','',1,{q:[Q('','pies|kot|ptaki|gryzonie|klimatyzacja|wilgoć, pleśń')]}),
+  G('Zapytaj również o'),
+  Y('r10','Astma','',0,{q:[Q('','leczona wziewnie|zaostrzenia w ostatnim roku|hospitalizacje')]}),
+  Y('r11','Zapalenie zatok, oskrzeli, płuc','',0,{q:[Q('','zatoki|oskrzela|płuca'),Q('','jednorazowo|nawracające',1)]}),
+  Y('r12','Gruźlica','',0,{q:[Q('','przebyta|kontakt z chorym|leczona')]}),
+  Y('r13','Alergie: egzema, katar sienny, polipy nosa','',0,{q:[Q('','AZS (atopowe zapalenie skóry)|katar sienny|polipy nosa')]})]},
+ {id:'gi',t:'Układ pokarmowy',en:'Gastrointestinal system',sys:1,items:[
+  Y('g1','Problemy z żuciem; zęby, język, dziąsła','',1,{q:[Q('','ból zębów|braki uzębienia|proteza|krwawienie dziąseł|zmiany na języku')]}),
+  Y('g2','Problemy przy jedzeniu; dieta, apetyt, nietolerancje','',1,{q:[Q('Apetyt','prawidłowy|zmniejszony|zwiększony',1),Q('Dieta','tradycyjna|wegetariańska|bezglutenowa|bezlaktozowa|redukcyjna'),Q('Nie toleruje','tłustych|mleka|glutenu|ostrych|surowych warzyw')]}),
+  Y('g3','Problemy z przełykaniem, zwracanie pokarmu','',1,{q:[Q('Trudność przy','pokarmach stałych|płynach|obu',1),Q('','ból przy przełykaniu|zwracanie pokarmu|uczucie zatrzymania kęsa'),Q('Przebieg','postępujący|stały|napadowy',1)]}),
+  Y('g4','Zgaga, odbijanie','',1,{q:[Q('','zgaga|odbijanie|ból za mostkiem|ślinienie|ból przy pochylaniu|pełność po posiłku'),Q('Kiedy','po posiłku|w nocy|w pozycji leżącej|na czczo')]}),
+  Y('g5','Nudności, wymioty','',1,{q:[Q('','nudności|wymioty'),Q('Treść','pokarmowa|zalegająca|żółć|krwista|fusowata|kałowa'),Q('Częstość','jednorazowo|kilka razy dziennie|codziennie|rzadziej',1),Q('Związek','po posiłku|rano|bez związku')]}),
+  Y('g6','Ból lub dyskomfort w jamie brzusznej','',1,{q:[Q('Lokalizacja',ABD,0,'g3'),Q('Charakter','kolkowy|stały|piekący|tępy|kurczowy'),Q('Promieniowanie','plecy|prawa łopatka|pachwina|opasujący|brak'),Q('Związek z','posiłkiem|na czczo|defekacją|mikcją|miesiączką|bez związku')]}),
+  Y('g7','Wzdęcie, zatrzymanie wiatrów, powiększenie obwodu brzucha','',1,{q:[Q('','wzdęcia|zatrzymanie wiatrów|powiększenie obwodu brzucha')]}),
+  Y('g8','Stolec: częstość, konsystencja, wygląd','',1,{q:[Q('Częstość','>3× dziennie|1–3× dziennie|co 2–3 dni|rzadziej niż co 3 dni',1),Q('Konsystencja','twardy|uformowany|papkowaty|wodnisty|tłuszczowy|ołówkowaty'),Q('Barwa','brązowa|odbarwiona|zielona|czarna',1),Q('Zmiana rytmu','biegunka|zaparcie|naprzemiennie',1)]}),
+  Y('g9','Krew w stolcu, stolec smolisty, ropa, śluz, pasożyty','',1,{q:[Q('','świeża krew na stolcu|krew zmieszana ze stolcem|stolec smolisty|śluz|ropa|pasożyty')]}),
+  Y('g10','Parcie na stolec','',1,{q:[Q('','z oddaniem stolca|bez oddania stolca',1)]}),
+  Y('g11','Ból przy defekacji','',1,{q:[Q('Kiedy','przed|w trakcie|po')]}),
+  Y('g12','Nietrzymanie stolca, uczucie niepełnego wypróżnienia','',1,{q:[Q('','nietrzymanie stolca|niepełne wypróżnienie')]}),
+  Y('g13','Rozpoznane żylaki odbytu (hemoroidy)','',1,{q:[Q('','krwawią|bolesne|leczone operacyjnie')]}),
+  G('Zapytaj również o'),
+  Y('g14','Operacje jamy brzusznej','',0,{q:[Q('','wyrostek|pęcherzyk żółciowy|przepuklina|żołądek|jelito|inna')]}),
+  Y('g15','WZW (wirusowe zapalenie wątroby), żółtaczka w przeszłości','',0,{q:[Q('','typ A|typ B|typ C|typ D|żółtaczka, nie wie jaka|szczepiony przeciw WZW B')]}),
+  Y('g16','Choroba wrzodowa żołądka lub dwunastnicy','',0,{q:[Q('','żołądek|dwunastnica|eradykacja Helicobacter pylori|leczony IPP (inhibitory pompy protonowej)')]})]},
+ {id:'uro',t:'Układ moczowy',en:'Urinary system',sys:1,items:[
+  Y('u1','Mikcja: częstość, objętość','',1,{q:[Q('Dziennie','<4×|4–8×|>8×',1),Q('Objętość','mała|prawidłowa|duża',1)]}),
+  Y('u2','Oddawanie moczu w nocy','',0,{q:[Q('Ile razy','1×|2×|3×|>3×',1)]}),
+  Y('u3','Ból lub pieczenie przy mikcji','',1,{q:[Q('Rodzaj','ból|pieczenie'),Q('Kiedy','przed mikcją|w trakcie|po mikcji'),Q('Towarzyszące','gorączka|ból w okolicy lędźwiowej|krwiomocz')]}),
+  Y('u4','Trudności z oddawaniem moczu','',0,{m55:'M',q:[Q('','oddawanie kroplami|słaby strumień|cienki strumień|trudny start|parcie naglące|przerywany strumień')]}),
+  Y('u5','Nietrzymanie moczu','',0,{m55:'K',q:[Q('Rodzaj','przy kaszlu, wysiłku (wysiłkowe)|z parciem (naglące)|stałe wyciekanie'),Q('Zabezpieczenie','nie potrzebuje|wkładki|pieluchomajtki',1)]}),
+  Y('u6','Uczucie niepełnego opróżnienia pęcherza','',1),
+  Y('u7','Zmiana zabarwienia, wyglądu moczu','',1,{q:[Q('','mętny|ciemny|czerwony (krwiomocz)|pienisty|nieprzyjemny zapach')]}),
+  G('Zapytaj również o'),
+  Y('u8','Zapalenia pęcherza moczowego','',0,{q:[Q('','jednorazowo|nawracające',1)]}),
+  Y('u9','Odmiedniczkowe zapalenie nerek'),Y('u10','Operacje urologiczne'),
+  Y('u11','Kamica nerkowa','',0,{q:[Q('','kolka nerkowa|zabieg usunięcia kamieni')]})]},
+ {id:'fem',t:'Żeński układ rozrodczy',en:'Female reproductive system',sys:1,sex:'K',must:1,items:[
+  O('f1','Pierwsza miesiączka','wiek',[Q('Wiek','≤10|11|12|13|14|15|≥16',1)],{b:1}),
+  O('f2','Cykl i krwawienie','czas trwania krwawienia, regularność',[Q('Cykl','regularny|nieregularny',1),Q('Długość cyklu','<21 dni|21–35 dni|>35 dni',1),Q('Krwawienie','<3 dni|3–7 dni|>7 dni',1)],{b:1}),
+  Y('f3','Bóle podczas miesiączki','',1,{q:[Q('','łagodne|wymagają leków|uniemożliwiają funkcjonowanie',1)]}),
+  O('f4','Obfitość krwawienia','',[Q('','skąpe|umiarkowane|obfite|ze skrzepami')],{b:1}),
+  O('f5','Data ostatniej miesiączki','',[Q('','w ostatnich 4 tygodniach|1–3 miesiące temu|nie pamięta|ciąża możliwa|ciąża wykluczona')],{b:1,f:[{k:'d',l:'Data',t:'date'}]}),
+  Y('f6','Krwawienie międzymiesiączkowe','',1),
+  Y('f7','Menopauza','wiek ustania miesiączek; krwawienie pomenopauzalne',1,{q:[Q('Wiek','<45|45–50|51–55|>55',1),Q('','krwawienie po menopauzie')]}),
+  Y('f8','Dolegliwości okresu pomenopauzalnego','',1,{q:[Q('','uderzenia gorąca|poty|bezsenność|suchość pochwy|wahania nastroju')]}),
+  O('f9','Badanie ginekologiczne, cytologia','jak często, kiedy ostatnio',[Q('Ostatnio','<1 rok|1–3 lata|>3 lata|nigdy',1),Q('Wynik','prawidłowy|nieprawidłowy|nie zna',1)],{b:1}),
+  O('f10','Ciąże, porody, poronienia','przebieg i powikłania',[Q('Ciąże','0|1|2|3|4+',1),Q('Porody','0|1|2|3|4+',1),Q('Poronienia','0|1|2|3+',1),Q('Powikłania','nadciśnienie|cukrzyca ciążowa|cięcie cesarskie|poród przedwczesny|inne')],{b:1}),
+  Y('f11','Antykoncepcja hormonalna','',1,{q:[Q('','tabletki|plaster|pierścień|wkładka hormonalna|implant|iniekcje')]}),
+  Y('f12','Operacje ginekologiczne','',1,{q:[Q('','cięcie cesarskie|wycięcie macicy|operacja jajników|łyżeczkowanie|inna')]}),
+  G('Wywiad specjalistyczny (gabinet ginekologa lub seksuologa)'),
+  Y('f13','Upławy','',0,{opt:1,q:[Q('','białe|żółte|zielone|szare|nieprzyjemny zapach|świąd')]}),
+  Y('f14','Problemy w życiu seksualnym','',0,{opt:1,q:[Q('','ból przy stosunku|spadek libido|problemy z orgazmem|pierwotne|wtórne')]}),
+  O('f15','Zabezpieczenie przed chorobami przenoszonymi drogą płciową','',[Q('','prezerwatywa|brak zabezpieczenia|nie dotyczy',1)],{opt:1}),
+  Y('f16','Krwawienie po stosunku','',0,{opt:1}),
+  Y('f17','Molestowanie seksualne','tylko gdy są uzasadnione powody, by je podejrzewać',0,{opt:1})]},
+ {id:'male',t:'Męski układ rozrodczy',en:'Male reproductive system',sys:1,sex:'M',items:[
+  Y('m1','Wyciek z cewki moczowej','',1,{q:[Q('','ropny|śluzowy|krwisty|świąd|pieczenie')]}),
+  Y('m2','Obrzęki lub guzki w pachwinie, w mosznie','',1,{q:[Q('','pachwina prawa|pachwina lewa|moszna|bolesne|niebolesne|powiększa się przy kaszlu')]}),
+  G('Wywiad specjalistyczny (gabinet androloga lub seksuologa)'),
+  Y('m3','Problemy w życiu seksualnym','',0,{opt:1,q:[Q('','ból przy stosunku|spadek libido|zaburzenia wzwodu|problemy z orgazmem|pierwotne|wtórne')]}),
+  O('m5','Zabezpieczenie przed chorobami przenoszonymi drogą płciową','',[Q('','prezerwatywa|brak zabezpieczenia|nie dotyczy',1)],{opt:1}),
+  Y('m6','Molestowanie seksualne','tylko gdy są uzasadnione powody, by je podejrzewać',0,{opt:1}),
+  G('Zapytaj również o'),
+  Y('m7','Choroby przenoszone drogą płciową','',0,{q:[Q('','chlamydioza|rzeżączka|kiła|inna')]}),
+  Y('m8','Operacje przepuklin pachwinowych, jąder','',0,{q:[Q('','przepuklina pachwinowa|jądra')]}),
+  Y('m9','Zaburzenia oddawania moczu','zob. układ moczowy')]},
+ {id:'msk',t:'Układ ruchu',en:'Musculoskeletal system',sys:1,items:[
+  Y('k1','Stawy: rozpoznane zapalenia, ból przy rozpoczęciu ruchu','',1,{q:[Q('Które','dłonie|nadgarstki|łokcie|barki|biodra|kolana|stawy skokowe|stopy'),Q('','symetrycznie|obrzęk|zaczerwienienie|ból przy rozpoczęciu ruchu')]}),
+  Y('k2','Poranna sztywność stawów','zmienność w ciągu doby',0,{q:[Q('Jak długo','<30 min|30–60 min|>60 min',1)]}),
+  Y('k3','Mięśnie: bóle, osłabienie','',1,{q:[Q('','ból|osłabienie|kurcze|porażenie|okresowe nasilenie')]}),
+  Y('k4','Kręgosłup: bóle','',1,{q:[Q('Odcinek','szyjny|piersiowy|lędźwiowy|krzyżowy'),Q('Promieniowanie','do kończyny górnej|do kończyny dolnej|poniżej kolana|brak'),Q('Nasila','chodzenie|stanie|siedzenie|ruch|kaszel|w nocy, w spoczynku')]}),
+  Y('k5','Samoistne złamania','',1,{q:[Q('','kręgosłup|biodro|nadgarstek|inne')]}),
+  G('Zapytaj również o'),
+  Y('k6','Urazy, złamania, operacje','',0,{q:[Q('','urazy|złamania|operacje stawów|endoproteza')]}),
+  Y('k7','RZS (reumatoidalne zapalenie stawów)'),Y('k8','Choroba zwyrodnieniowa stawów'),Y('k9','Osteoporoza')]},
+ {id:'neuro',t:'Układ nerwowy',en:'Nervous system',sys:1,items:[
+  Y('n1','Problemy z czytaniem, liczeniem, pisaniem, mową','',1,{q:[Q('','czytanie|liczenie|pisanie|mowa')]}),
+  Y('n2','Zaburzenia pamięci','',1,{q:[Q('','świeże wydarzenia|dawne wydarzenia|zauważają bliscy')]}),
+  Y('n3','Ból głowy','poranny ból z porannymi wymiotami: myśl o guzie OUN (ośrodkowego układu nerwowego)',1,{q:[Q('Lokalizacja','czołowa|skroniowa|potyliczna|ciemieniowa|cała głowa|jednostronnie'),Q('Charakter','pulsujący|uciskowy|kłujący|rozsadzający'),Q('Pora','rano|w ciągu dnia|wieczorem|budzi w nocy'),Q('Początek','nagły, najsilniejszy w życiu|stopniowy',1),Q('Towarzyszące','nudności|wymioty|światłowstręt|błyski, aura|zaburzenia widzenia|gorączka|sztywność karku')]}),
+  Y('n4','Zawroty głowy, omdlenia, skłonność do upadków','',1,{q:[Q('','zawroty wirowania|niepewność chodu|omdlenia|upadki')]}),
+  Y('n5','Napadowa senność, śpiączka','',1,{q:[Q('','napadowa senność|epizody śpiączki')]}),
+  Y('n6','Urazy głowy','',1,{q:[Q('','z utratą przytomności|bez utraty przytomności|w ostatnim miesiącu')]}),
+  Y('n7','Zaburzenia czucia','osłabienie czucia, mrowienie, drętwienie',1,{q:[Q('Gdzie','dłonie|stopy|kończyna górna prawa|kończyna górna lewa|kończyna dolna prawa|kończyna dolna lewa|twarz'),Q('Rodzaj','drętwienie|mrowienie|osłabienie czucia')]}),
+  Y('n8','Niedowład, porażenie kończyn','',1,{q:[Q('Gdzie','kończyna górna prawa|kończyna górna lewa|kończyna dolna prawa|kończyna dolna lewa|połowa ciała'),Q('Początek','nagły|stopniowy',1)]}),
+  Y('n9','Wzrok','',1,{q:[Q('','pogorszenie ostrości|słabe widzenie po zmroku|mroczki|podwójne widzenie|pieczenie oczu|okulary|soczewki kontaktowe')]}),
+  Y('n10','Słuch (szumy), smak, węch','',1,{q:[Q('','niedosłuch|szumy uszne|zaburzenia smaku|zaburzenia węchu')]}),
+  G('Zapytaj również o'),
+  Y('n11','Drgawki, utraty przytomności','',0,{q:[Q('','drgawki|utraty przytomności|leczony przeciwpadaczkowo')]}),
+  Y('n12','Nadużywanie alkoholu, substancji psychoaktywnych','',0,{q:[Q('','alkohol|leki nasenne|leki uspokajające|narkotyki')]})]},
+ {gap:'Dalej'},
+ {id:'meds',t:'Leki, alergie',en:'Medications, allergies',sp:'meds',req:1,items:[
+  Y('l1','Leki bez recepty','uspokajające, przeciwbólowe, przeczyszczające, inne',1,{q:[Q('','przeciwbólowe|NLPZ (niesteroidowe leki przeciwzapalne)|uspokajające|nasenne|przeczyszczające|na zgagę|suplementy|zioła'),Q('Jak często','codziennie|kilka razy w tygodniu|doraźnie',1)]}),
+  Y('l2','Antykoncepcja','',1,{sex:'K',q:[Q('','tabletki|plaster|pierścień|wkładka hormonalna|implant|iniekcje')]})]},
+ {id:'physio',t:'Czynności fizjologiczne i psychika',en:'Systemic review, psychosocial',req:1,items:[
+  Y('o1','Ograniczenie codziennej aktywności','',1,{q:[Q('','nieznacznie|wyraźnie|wymaga pomocy|leżący',1)]}),
+  Y('o2','Zmęczenie bez wyraźnej przyczyny','',1,{q:[Q('Od','tygodni|miesięcy|zawsze',1)]}),
+  Y('o3','Zaburzenia snu, chrapanie','',1,{q:[Q('','trudności z zasypianiem|wybudzanie|wczesne budzenie|chrapanie|senność w dzień')]}),
+  Y('o4','Zmiana masy ciała lub apetytu','',1,{q:[Q('Masa ciała','spadek|przyrost',1),Q('O ile','<5 kg|5–10 kg|>10 kg',1),Q('W jakim czasie','<1 mies.|1–6 mies.|>6 mies.',1),Q('Apetyt','zmniejszony|zwiększony|bez zmian',1)]}),
+  Y('o5','Zmiany wyglądu','zauważone przez pacjenta lub otoczenie',1,{q:[Q('','bladość|zażółcenie|nadmierne owłosienie|łysienie|zmiana rozkładu tkanki tłuszczowej|zmiany skórne')]}),
+  Y('o6','Spowolnienie, uczucie zimna lub gorąca','',1,{q:[Q('','spowolnienie|uczucie zimna|uczucie gorąca|nietolerancja ciepła')]}),
+  Y('o7','Gorączka, dreszcze, poty nocne','',1,{q:[Q('Objaw','gorączka|dreszcze|poty nocne|zmienia pościel'),Q('Temp. maks.','37–37,9 °C|38–38,9 °C|39–39,9 °C|≥40 °C',1)]}),
+  Y('o8','Samoistne krwawienia, siniaki','',1,{q:[Q('','z nosa|z dziąseł|do stawów|siniaki bez urazu|przedłużone krwawienie')]}),
+  Y('o9','Świąd skóry','',1,{q:[Q('Gdzie','uogólniony|miejscowy',1),Q('Kiedy','w nocy|po kąpieli|stale')]}),
+  Y('o10','Wielomocz, nykturia, wzmożone pragnienie','',1,{q:[Q('','wielomocz|nykturia|wzmożone pragnienie')]}),
+  Y('o11','Nieregularne wypróżnienia, krew lub śluz w stolcu','',1,{q:[Q('','nieregularnie|krew|śluz')]}),
+  G('Aspekty psychologiczne'),
+  Y('s1','Zmiany nastroju','',0,{q:[Q('','obniżony|podwyższony|wahania',1)]}),
+  Y('s2','Nerwowość'),
+  Y('s3','Zaburzenia orientacji i uwagi, apatia, spowolnienie','',0,{q:[Q('','orientacja|uwaga|apatia|spowolnienie')]}),
+  Y('s4','Kłopoty, traumatyczne wydarzenia','',0,{q:[Q('','żałoba|choroba w rodzinie|problemy finansowe|rozstanie|utrata pracy')]}),
+  Y('s5','Częste konflikty w rodzinie'),Y('s6','Konflikty w pracy'),
+  O('s7','Usposobienie współmałżonka lub rodziców','',[Q('','wspierające|obojętne|konfliktowe',1)]),
+  O('s8','Rodzeństwo','kolejność urodzeń',[Q('','jedynak|najstarsze|środkowe|najmłodsze',1)]),
+  O('s9','Ogólna satysfakcja z życia','',[Q('','zadowolony|częściowo|niezadowolony',1)])]},
+ {id:'subst',t:'Używki',en:'Substance use',req:1,items:[
+  Y('x1','Papierosy','',1,{py:1,q:[Q('Status','pali|rzucił',1),Q('Sztuk dziennie','5|10|15|20|30|40',1),Q('Ile lat','5|10|15|20|30|40|50',1),Q('Rzucił','<1 rok temu|1–10 lat temu|>10 lat temu',1)]}),
+  Y('x2','Alkohol','porcja ≈ 10 g etanolu, np. piwo 250 ml (przelicznik spoza skryptu)',1,{q:[Q('Rodzaj','piwo|wino|wódka'),Q('Jak często','okazjonalnie|co tydzień|kilka razy w tygodniu|codziennie',1),Q('Ilość naraz','1–2 porcje|3–4 porcje|≥5 porcji',1)]}),
+  Y('x3','Narkotyki, substancje psychoaktywne','',1,{q:[Q('Jakie','marihuana|amfetamina|kokaina|opioidy|dopalacze|inne'),Q('Jak często','próbował|okazjonalnie|regularnie',1)]})]},
+ {id:'past',t:'Choroby przebyte',en:'Past medical history',req:1,items:[
+  Y('b1','Pobyty w szpitalu','',1,{q:[Q('Oddział','kardiologia|choroby wewnętrzne|chirurgia|ortopedia|ginekologia|położnictwo|neurologia|psychiatria|inny'),Q('Kiedy','<1 rok|1–5 lat|>5 lat')]}),
+  Y('b2','Zabiegi chirurgiczne','też usuwanie zębów',1,{q:[Q('','wyrostek|pęcherzyk żółciowy|przepuklina|tarczyca|stawy|serce|ginekologiczne|usunięcie zębów|inne')]}),
+  Y('b3','Przebyte choroby, szczególnie zakaźne i gruźlica','',1,{q:[Q('','gruźlica|WZW (wirusowe zapalenie wątroby)|HIV|choroby wieku dziecięcego|borelioza|inne')]}),
+  Y('b4','Leczenie u innego lekarza','',1,{q:[Q('','lekarz rodzinny|kardiolog|endokrynolog|diabetolog|pulmonolog|gastroenterolog|inny specjalista')]}),
+  Y('b5','Pobyty za granicą, zwłaszcza w tropikach','jeśli mogą mieć związek z dolegliwościami',1,{q:[Q('Gdzie','Afryka|Azja|Ameryka Południowa i Środkowa|Europa'),Q('Kiedy','<1 mies. temu|1–6 mies. temu|>6 mies. temu',1)]})]},
+ {id:'env',t:'Wywiad środowiskowy',en:'Social history',req:1,items:[
+  O('e1','Praca, czynniki szkodliwe','obecna lub dawna',[Q('Praca','fizyczna|biurowa|zmianowa|emeryt|bezrobotny|uczeń, student',1),Q('Narażenie','pył|chemikalia|hałas|azbest|zwierzęta|promieniowanie|brak')],{b:1}),
+  O('e2','Warunki mieszkaniowe','jeśli mają znaczenie kliniczne',[Q('','mieszkanie|dom|winda|brak windy|pełne sanitariaty|mieszka sam|z rodziną|DPS (dom pomocy społecznej)')],{b:1}),
+  O('e3','Współmałżonek','zawód, zatrudnienie, jeśli ma znaczenie',[Q('','pracuje|nie pracuje|emeryt|brak')],{b:1})]},
+ {id:'fam',t:'Wywiad rodzinny',en:'Family history',req:1,fam:1,items:[
+  Y('w1','Choroby układu sercowo-naczyniowego','zwłaszcza u krewnych I stopnia',1,{q:[Q('Choroba','zawał|udar|nagły zgon sercowy|niewydolność serca'),Q('Kto',WHO),Q('Wiek zachorowania',FAGE,1)]}),
+  Y('w2','Nadciśnienie tętnicze','',1,{q:[Q('Kto',WHO)]}),
+  Y('w3','Nowotwory','',1,{q:[Q('Jaki','piersi|jelita grubego|płuca|prostaty|jajnika|inny'),Q('Kto',WHO),Q('Wiek zachorowania',FAGE,1)]}),
+  Y('w4','Przewlekłe choroby płuc','',1,{q:[Q('Kto',WHO)]}),
+  Y('w5','Cukrzyca','',1,{q:[Q('Kto',WHO)]}),
+  Y('w6','Choroby nerek','',1,{q:[Q('Kto',WHO)]}),
+  Y('w7','Choroby tarczycy','',1,{q:[Q('Kto',WHO)]}),
+  Y('w8','Inne choroby w rodzinie','',1,{q:[Q('Kto',WHO)]}),
+  O('w9','Rodzice','żyją czy przyczyna zgonu, jeśli może to być istotne',[Q('Matka','żyje|zawał|udar|nowotwór|inna przyczyna',1),Q('Ojciec','żyje|zawał|udar|nowotwór|inna przyczyna',1)],{b:1})]},
+ {id:'close',t:'Zakończenie',en:'Closing',req:1,items:[
+  C('z1','Zapytałem, czy pacjent chce coś dodać','',{b:1}),
+  C('z2','Krótko podsumowałem wywiad',''),
+  C('z3','Wyjaśniłem, na czym będzie polegało badanie przedmiotowe','',{b:1})]}
+];
+const SEC=SECTIONS.filter(s=>s.id);
+const ITEMS={};SEC.forEach(s=>s.items.forEach(i=>{if(i.id)ITEMS[i.id]=Object.assign(i,{sec:s.id})}));
+
+/* complaint card: option groups depend on the complaint type */
+/* guided pathways: chosen main problem → targeted interview; clinical additions beyond the Lab-NUK script */
+const RF=(id,t,h,x)=>Object.assign(Y(id,t,h,0,x),{rf:1});
+const ONSET='dziś|wczoraj|2–7 dni|1–4 tyg.|1–6 mies.|>6 mies.';
+const ASSOC='gorączka|duszność|kołatanie serca|poty|nudności|wymioty|biegunka|kaszel|zawroty głowy|omdlenie|osłabienie|utrata masy ciała|brak';
+const WORSE='wysiłek|ruch|głęboki oddech|kaszel|pozycja leżąca|posiłek|na czczo|stres|zimno|ucisk';
+const BETTER='odpoczynek|zmiana pozycji|pochylenie do przodu|posiłek|leki przeciwbólowe|ciepło|nic nie pomaga';
+const LOCG='głowa|szyja|klatka piersiowa|brzuch|plecy|okolica lędźwiowa|kończyna górna|kończyna dolna|stawy|uogólniony';
+const JOINTS='dłonie|nadgarstki|łokcie|barki|biodra|kolana|stawy skokowe|stopy|kręgosłup';
+const PATHS=[
+ {id:'klatka',label:'ból w klatce piersiowej',sys:['cv','resp','gi'],nrs:1,
+  S:'za mostkiem|lewa połowa klatki|prawa połowa klatki|cała klatka|punktowo',
+  C:'uciskający|gniotący|piekący|kłujący|przeszywający|rozdzierający|nasila się przy wdechu',
+  R:'lewe ramię|prawe ramię|żuchwa|szyja|plecy|między łopatki|nadbrzusze|brak',
+  L:'odpoczynek|nitrogliceryna|pochylenie do przodu|posiłek|leki zobojętniające|leki przeciwbólowe|nic nie pomaga',
+  items:[G('Czerwone flagi'),
+   RF('kp1','Ból w spoczynku, narastający lub trwający >20 min','podejrzenie OZW (ostrego zespołu wieńcowego)'),
+   RF('kp2','Nagły, rozdzierający ból promieniujący do pleców','podejrzenie rozwarstwienia aorty'),
+   RF('kp3','Nagła duszność','podejrzenie zatorowości płucnej, odmy'),
+   'ds3',
+   RF('kp4','Omdlenie, zasłabnięcie w trakcie bólu',''),
+   G('Różnicowanie'),
+   Y('kp5','Ból nasila się przy wdechu lub kaszlu','charakter opłucnowy'),
+   Y('kp6','Ból zależy od pozycji, ulga przy pochyleniu do przodu','typowe dla zapalenia osierdzia'),
+   Y('kp7','Ból przy ucisku ściany klatki lub ruchach tułowia','przyczyna mięśniowo-szkieletowa'),
+   'g4','c3','c2','c5',
+   Y('kp8','Niedawna infekcja, gorączka',''),
+   G('Czynniki ryzyka'),
+   'c13',Y('kp9','Cukrzyca'),Y('kp10','Hipercholesterolemia'),'x1','w1','c12',
+   Y('kp11','Unieruchomienie, niedawna operacja, długa podróż','czynnik ryzyka ŻChZZ (żylnej choroby zakrzepowo-zatorowej)'),
+   Y('kp12','Jednostronny obrzęk, ból łydki','podejrzenie ZŻG (zakrzepicy żył głębokich)'),
+   Y('kp13','Przebyta ZŻG (zakrzepica żył głębokich) lub ZTP (zatorowość płucna)'),
+   'l2','c16']},
+ {id:'dusznosc',label:'duszność',sys:['resp','cv'],nyha:1,
+  C:'wysiłkowa|spoczynkowa|napadowa nocna|w pozycji leżącej|wdechowa|wydechowa|ze świstami',
+  items:[G('Czerwone flagi'),
+   RF('ds1','Duszność spoczynkowa, nie może dokończyć zdania'),
+   RF('ds2','Nagły początek, ból w klatce piersiowej','podejrzenie zatorowości płucnej, odmy, OZW (ostrego zespołu wieńcowego)'),
+   RF('ds3','Krwioplucie'),
+   RF('ds4','Sinica, splątanie, senność'),
+   G('Różnicowanie'),
+   'r2','r3','r4','c1','c2','c5','c7','c8','c4','o7','o4',
+   G('Czynniki ryzyka i tło'),
+   'x1','r10',Y('ds5','Rozpoznana POChP (przewlekła obturacyjna choroba płuc)'),Y('ds6','Rozpoznana niewydolność serca'),'c13','kp11','kp12','r9']},
+ {id:'kaszel',label:'kaszel',title:'infekcja dróg oddechowych',alts:[{label:'ból gardła',C:'drapanie|ból przy przełykaniu|stały ból',C2:[['Temp. maks.','brak gorączki|37–37,9 °C|38–38,9 °C|39–39,9 °C|≥40 °C',1]],nrs:1},{label:'katar',C:'wodnisty|śluzowy|ropny|z krwią|zatkany nos',C2:[]}],sys:['resp'],
+  C:'suchy|wilgotny|napadowy|szczekający|poranny|nocny',C2:[['Plwocina','brak|śluzowa|ropna|z krwią|pienista, różowa'],['Temp. maks.','brak gorączki|37–37,9 °C|38–38,9 °C|39–39,9 °C|≥40 °C',1]],
+  items:[G('Czerwone flagi'),
+   'ds3','ds1',
+   RF('ks1','Kaszel >3 tygodnie u palacza lub zmiana charakteru kaszlu','czujność onkologiczna'),
+   RF('ks2','Utrata masy ciała, poty nocne','gruźlica, nowotwór'),
+   G('Różnicowanie'),
+   'r1','r3','r4','r5','r6',
+   Y('ks3','Katar, spływanie wydzieliny po tylnej ścianie gardła'),
+   'g4',
+   Y('ks4','Przyjmuje inhibitor ACE (konwertazy angiotensyny)','np. ramipryl, perindopryl: kaszel polekowy'),
+   G('Narażenie i tło'),
+   'r8','r9','r12','b5','x1','r10','r13',
+   O('ks5','Szczepienia','',[Q('','grypa w tym sezonie|COVID-19|pneumokoki|krztusiec|nie wie')])]},
+ {id:'brzuch',label:'ból brzucha',sys:['gi','uro','fem'],nrs:1,S:ABD,Sg:'g3',
+  C:'kolkowy|stały|piekący|tępy|kurczowy|ostry',R:'plecy|prawa łopatka|pachwina|opasujący|brak',
+  items:[G('Czerwone flagi'),
+   RF('bb1','Nagły, bardzo silny ból, brzuch twardy, ból przy ruchu','podejrzenie zapalenia otrzewnej'),
+   RF('bb2','Wymioty krwią lub fusowate, stolec smolisty','krwawienie z górnego odcinka przewodu pokarmowego'),
+   RF('bb3','Zatrzymanie gazów i stolca, wzdęcie','podejrzenie niedrożności'),
+   RF('bb4','Gorączka z dreszczami i żółtaczką','podejrzenie zapalenia dróg żółciowych'),
+   RF('bb5','Zatrzymanie miesiączki, możliwa ciąża','wyklucz ciążę pozamaciczną',{sex:'K'}),
+   RF('bb6','Omdlenie, zasłabnięcie',''),
+   G('Różnicowanie'),
+   'g5','g4','g8','g9','o7','o4',
+   Y('bb7','Ból po tłustym posiłku','kolka żółciowa'),
+   'u3','u7','f5','f13',
+   G('Tło'),
+   'g14','g15','g16',Y('bb8','Rozpoznana kamica żółciowa'),'u11','l1','x2']},
+ {id:'biegunka',label:'biegunka',title:'biegunka i wymioty',alts:[{label:'wymioty',C:'treść pokarmowa|żółć|krwiste|fusowate|kałowe',C2:[['Ile razy na dobę','1–2|3–5|>5',1],['Związek z posiłkiem','po posiłku|na czczo|bez związku',1]]},{label:'nudności',C:null,C2:[['Związek z posiłkiem','po posiłku|na czczo|rano|bez związku',1]]}],sys:['gi'],
+  C:'wodnista|papkowata|z krwią|ze śluzem|tłuszczowa',C2:[['Stolców na dobę','3–5|6–10|>10',1]],
+  items:[G('Czerwone flagi'),
+   'g9',
+   RF('bw1','Objawy odwodnienia','mało moczu, suchość w ustach, zawroty przy wstawaniu'),
+   RF('bw2','Wymioty uniemożliwiające picie'),
+   RF('bw3','Gorączka >38,5 °C lub silny ból brzucha'),
+   RF('bw4','Objawy >7 dni lub chudnięcie'),
+   G('Wywiad epidemiologiczny'),
+   Y('bw5','Podobne objawy u osób z otoczenia'),
+   'b5',
+   Y('bw6','Podejrzany posiłek','jaja, drób, owoce morza, niepasteryzowane mleko, posiłek poza domem'),
+   Y('bw7','Antybiotyk w ostatnich 3 miesiącach','ryzyko zakażenia Clostridioides difficile'),
+   Y('bw8','Pobyt w szpitalu lub DPS (domu pomocy społecznej)'),
+   G('Różnicowanie'),
+   'g5','g6','g8','g2','o4','u1']},
+ {id:'zum',label:'dolegliwości przy oddawaniu moczu',sys:['uro','fem','male'],
+  C:'pieczenie|ból|częstomocz|parcie naglące|krwiomocz|mętny mocz',
+  items:[G('Czerwone flagi'),
+   RF('zm1','Gorączka >38 °C, dreszcze','podejrzenie odmiedniczkowego zapalenia nerek lub urosepsy'),
+   RF('zm2','Ból w okolicy lędźwiowej','podejrzenie odmiedniczkowego zapalenia nerek, kamicy'),
+   RF('zm3','Nudności, wymioty'),
+   RF('zm4','Możliwa ciąża','zmienia leczenie i postępowanie',{sex:'K'}),
+   G('Objawy'),
+   'u3','u1','u7','u6','u2','u4',
+   Y('zm5','Ból w okolicy nadłonowej'),
+   G('Różnicowanie'),
+   Y('zm6','Upławy, świąd lub ból w okolicy pochwy','częściej zapalenie pochwy niż ZUM (zakażenie układu moczowego)',{sex:'K'}),
+   'm1',
+   Y('zm7','Nowy partner seksualny, kontakty bez zabezpieczenia','ryzyko chorób przenoszonych drogą płciową'),
+   'f5',
+   G('Czynniki ryzyka powikłanego ZUM (zakażenia układu moczowego)'),
+   'u8','u11','u9',
+   Y('zm8','Cewnikowanie lub zabieg urologiczny w ostatnim czasie'),
+   Y('zm9','Cukrzyca, immunosupresja'),
+   'bw7']},
+ {id:'glowa',label:'ból głowy',sys:['neuro'],nrs:1,
+  S:'czołowa|skroniowa|potyliczna|ciemieniowa|cała głowa|jednostronnie|za okiem',
+  C:'pulsujący|uciskowy|kłujący|rozsadzający',
+  E:'wysiłek|kaszel|parcie|pochylenie|stres|brak snu|alkohol|miesiączka|światło|hałas',L:'sen|ciemność, cisza|leki przeciwbólowe|nic nie pomaga',
+  items:[G('Czerwone flagi'),
+   RF('bg1','Nagły, „piorunujący” ból, najsilniejszy w życiu','podejrzenie krwotoku podpajęczynówkowego'),
+   RF('bg2','Gorączka, sztywność karku, wysypka','podejrzenie zapalenia opon'),
+   RF('bg3','Objawy ogniskowe: niedowład, zaburzenia mowy, widzenia, splątanie'),
+   RF('bg4','Ból po urazie głowy'),
+   RF('bg5','Ból budzi w nocy, poranny z wymiotami, nasila się przy kaszlu','wzrost ciśnienia śródczaszkowego'),
+   RF('bg6','Pierwszy ból głowy po 50 r.ż. lub zmiana dotychczasowego charakteru'),
+   RF('bg7','Bolesność skroni, ból żuchwy przy żuciu, zaburzenia widzenia','po 50 r.ż.: podejrzenie olbrzymiokomórkowego zapalenia tętnic'),
+   RF('bg8','Ciąża lub połóg','',{sex:'K'}),
+   RF('bg9','Nowotwór lub immunosupresja w wywiadzie'),
+   G('Charakterystyka'),
+   Y('bg10','Aura przed bólem','błyski, mroczki, zaburzenia czucia'),
+   Y('bg11','Światłowstręt, nadwrażliwość na dźwięki, nudności'),
+   O('bg12','Ile dni w miesiącu boli głowa','',[Q('','<4|4–14|≥15',1)]),
+   O('bg13','Ile dni w miesiącu przyjmuje leki przeciwbólowe','≥10–15 dni: ryzyko polekowego bólu głowy',[Q('','<10|10–14|≥15',1)]),
+   'c13','n9','l2']},
+ {id:'zawroty',label:'zawroty głowy',title:'zawroty głowy i omdlenia',alts:[{label:'omdlenie',C:'z utratą przytomności|zasłabnięcie bez utraty przytomności',C2:[['Liczba epizodów','1|2–3|>3',1],['Utrata przytomności trwała','sekundy|<1 min|>1 min|nie wie',1]]}],sys:['cv','neuro'],
+  C:'wirowania|niepewność chodu|uczucie omdlewania|utrata przytomności',
+  items:[G('Czerwone flagi'),
+   RF('zw1','Omdlenie podczas wysiłku lub w pozycji leżącej','podejrzenie przyczyny kardiogennej'),
+   RF('zw2','Kołatanie lub ból w klatce przed omdleniem'),
+   RF('zw3','Nagły zgon sercowy w rodzinie przed 50 r.ż.'),
+   RF('zw4','Podwójne widzenie, zaburzenia mowy, niedowład, niezborność','podejrzenie przyczyny ośrodkowej'),
+   RF('zw5','Uraz przy upadku'),
+   G('Różnicowanie'),
+   Y('zw6','Objawy zwiastunowe: nudności, poty, ciemno przed oczami','typowe dla omdlenia odruchowego'),
+   O('zw7','Okoliczności','',[Q('','długie stanie|gorąco|silny ból|widok krwi|wstawanie|mikcja|kaszel|ruch głowy|bez związku')]),
+   Y('zw8','Zawroty przy zmianie pozycji głowy, przewracaniu się w łóżku','typowe dla BPPV (łagodnych napadowych położeniowych zawrotów głowy)'),
+   'n10',
+   Y('zw9','Po epizodzie: drgawki, przygryzienie języka, nietrzymanie moczu, splątanie','różnicowanie z napadem padaczkowym'),
+   Y('zw10','Leki obniżające ciśnienie, moczopędne lub nowe leki'),
+   'c2','c11','c13','c14','c15','o2']},
+ {id:'kolatanie',label:'kołatanie serca',sys:['cv'],
+  C:'miarowe|niemiarowe|szybkie|„przeskakiwanie”',C2:[['Początek i koniec','nagły|stopniowy',1]],
+  items:[G('Czerwone flagi'),
+   RF('kl1','Omdlenie lub zasłabnięcie w trakcie'),
+   RF('kl2','Ból w klatce piersiowej lub duszność w trakcie'),
+   'zw3',
+   G('Różnicowanie i czynniki'),
+   O('kl3','Czynniki wyzwalające','',[Q('','kawa|alkohol|napoje energetyczne|nikotyna|stres|wysiłek|bez przyczyny')]),
+   Y('kl4','Objawy nadczynności tarczycy','chudnięcie, nietolerancja ciepła, drżenie, nerwowość'),
+   Y('kl5','Leki lub substancje pobudzające','sympatykomimetyki, leki wziewne, lewotyroksyna, narkotyki'),
+   'c14','c15','c3','s2','x2','x3','w7']},
+ {id:'goraczka',label:'gorączka',sys:['resp','uro','gi'],
+  C:'stała|wieczorna|z dreszczami|z potami|nawracająca',C2:[['Temp. maks.','37–37,9 °C|38–38,9 °C|39–39,9 °C|≥40 °C',1]],
+  items:[G('Czerwone flagi'),
+   RF('gr1','Splątanie, senność'),
+   RF('gr2','Sztywność karku, wysypka niebledniejąca pod uciskiem','podejrzenie zakażenia meningokokowego'),
+   RF('gr3','Duszność, szybki oddech'),
+   RF('gr4','Immunosupresja, chemioterapia, brak śledziony'),
+   RF('gr5','Pobyt w tropikach w ostatnich 12 miesiącach','wyklucz malarię'),
+   G('Szukanie źródła'),
+   'r2','r5','r6','u3','g8','g6','n3','k1',
+   Y('gr6','Zmiany skórne, wysypka'),
+   G('Narażenie'),
+   Y('gr7','Ukąszenie kleszcza, kontakt ze zwierzętami'),
+   Y('gr8','Kontakt z osobami chorymi'),
+   Y('gr9','Ryzykowne kontakty seksualne, iniekcje dożylne'),
+   Y('gr10','Niedawne zabiegi, cewniki, implanty, sztuczne zastawki'),
+   'bw7','o4']},
+ {id:'plecy',label:'ból pleców',sys:['msk','neuro'],nrs:1,
+  S:'szyjny|piersiowy|lędźwiowy|krzyżowy',R:'do kończyny górnej|do kończyny dolnej|poniżej kolana|do pachwiny|brak',
+  C:'tępy|kłujący|piekący|„strzelający”|kurczowy',E:'chodzenie|stanie|siedzenie|schylanie|kaszel|kichanie|w nocy, w spoczynku',
+  items:[G('Czerwone flagi'),
+   RF('bp1','Zaburzenia oddawania moczu lub stolca, drętwienie krocza','podejrzenie zespołu ogona końskiego'),
+   RF('bp2','Postępujący niedowład kończyn'),
+   RF('bp3','Gorączka, iniekcje dożylne, immunosupresja','podejrzenie zakażenia'),
+   RF('bp4','Nowotwór w wywiadzie, niezamierzona utrata masy ciała'),
+   RF('bp5','Uraz, osteoporoza, przewlekłe stosowanie glikokortykosteroidów','podejrzenie złamania'),
+   RF('bp6','Ból nocny, spoczynkowy, nieustępujący'),
+   RF('bp7','Ból pulsujący w brzuchu promieniujący do pleców','podejrzenie tętniaka aorty brzusznej'),
+   G('Różnicowanie'),
+   'k2','n7',
+   Y('bp8','Praca fizyczna, dźwiganie'),
+   'u3','u11']},
+ {id:'stawy',label:'ból stawów',sys:['msk'],nrs:1,S:JOINTS,
+  C:'ból|obrzęk|zaczerwienienie|ocieplenie|ograniczenie ruchu',C2:[['Liczba stawów','jeden|2–4|≥5',1],['Układ','symetryczny|niesymetryczny',1]],
+  items:[G('Czerwone flagi'),
+   RF('st1','Gorący, obrzęknięty staw z gorączką','podejrzenie septycznego zapalenia stawu'),
+   RF('st2','Uraz, nie może obciążyć kończyny'),
+   G('Różnicowanie'),
+   'k2','k3',
+   Y('st3','Objawy pozastawowe','wysypka, łuszczyca, zapalenie oka, afty, objaw Raynauda, suchość oczu i ust'),
+   Y('st4','Niedawna infekcja: biegunka, zapalenie cewki, gardła','reaktywne zapalenie stawów'),
+   Y('st5','Dna moczanowa, alkohol, leki moczopędne'),
+   Y('st6','Ukąszenie kleszcza, rumień wędrujący'),
+   'o7','k7','k8']},
+ {id:'obrzeki',label:'obrzęki nóg',sys:['cv','uro'],
+  S:'kostki|podudzia|całe kończyny|jednostronne|obustronne',C:'miękkie, ciastowate|twarde|bolesne|z zaczerwienieniem',
+  items:[G('Czerwone flagi'),
+   RF('ob1','Jednostronny, bolesny obrzęk łydki z zaczerwienieniem','podejrzenie ZŻG (zakrzepicy żył głębokich)'),
+   RF('ob2','Duszność, ból w klatce piersiowej'),
+   G('Różnicowanie'),
+   'c3','c7','c4',
+   Y('ob3','Pienisty mocz, obrzęki twarzy i powiek','przyczyna nerkowa'),
+   Y('ob4','Choroba wątroby, alkohol, powiększenie obwodu brzucha'),
+   Y('ob5','Leki: amlodypina, NLPZ (niesteroidowe leki przeciwzapalne), glikokortykosteroidy'),
+   Y('ob6','Objawy niedoczynności tarczycy','senność, uczucie zimna, zaparcia, przyrost masy ciała'),
+   'c9','kp11','ds6']},
+ {id:'oslabienie',label:'osłabienie',title:'osłabienie i chudnięcie',alts:[{label:'chudnięcie',C:null,C2:[['Ubytek masy ciała','<5 kg|5–10 kg|>10 kg',1],['W jakim czasie','<1 mies.|1–6 mies.|>6 mies.',1],['Zamierzone','niezamierzone|zamierzone',1]]}],sys:[],
+  C:'ogólne|mięśniowe|jednej strony ciała|męczliwość',
+  items:[G('Czerwone flagi'),
+   RF('os1','Nagłe osłabienie jednej strony ciała, opadnięcie kącika ust, zaburzenia mowy','podejrzenie udaru: wezwij pomoc'),
+   RF('os2','Niezamierzona utrata >5% masy ciała w 6–12 miesięcy'),
+   RF('os3','Poty nocne, gorączka'),
+   RF('os4','Krwawienie z przewodu pokarmowego lub obfite miesiączki','niedokrwistość'),
+   G('Różnicowanie'),
+   'o2','o3','o4','o5','o6','o10','o8','s1',
+   Y('os5','Utrata zainteresowań i przyjemności (anhedonia)'),
+   'c8','c3','g8','w7','x2','l1']},
+ {id:'wysypka',label:'zmiany skórne',sys:[],
+  S:'twarz|tułów|kończyny|dłonie|stopy|uogólniona|błony śluzowe',C:'plamy|grudki|pęcherze|bąble pokrzywkowe|złuszczanie|krosty',
+  items:[G('Czerwone flagi'),
+   RF('wy1','Wybroczyny niebledniejące pod uciskiem, gorączka'),
+   RF('wy2','Pęcherze, złuszczanie skóry, zmiany na błonach śluzowych','podejrzenie SJS/TEN (zespołu Stevensa-Johnsona / toksycznej nekrolizy naskórka)'),
+   RF('wy3','Obrzęk twarzy, języka, duszność','podejrzenie anafilaksji'),
+   G('Różnicowanie'),
+   Y('wy4','Świąd'),
+   Y('wy5','Nowy lek w ostatnich 8 tygodniach'),
+   Y('wy6','Nowe kosmetyki, detergenty, kontakt z roślinami lub zwierzętami'),
+   Y('wy7','Podobne zmiany u domowników'),
+   'st6','o7','k1','r13']},
+ {id:'inne',label:'inne',sys:[],S:LOCG,items:[]}
+];
+const PBY={},PLAB=[];PATHS.forEach(p=>{p.title=p.title||p.label;[{label:p.label}].concat(p.alts||[]).forEach(o=>{PBY[o.label]={p,o};PLAB.push(o.label)});p.sec={id:'pw-'+p.id,t:'Wywiad: '+p.title,en:'Focused history',pw:p,items:[]};
+ p.items.forEach(x=>{if(x&&x.id&&!ITEMS[x.id]){x.sec=p.sec.id;ITEMS[x.id]=x}})});
+PATHS.forEach(p=>{p.sec.items=p.items.map(x=>typeof x==='string'?ITEMS[x]:x).filter(Boolean)});
+const LEGACY={'kaszel, infekcja dróg oddechowych':'kaszel','biegunka, wymioty':'biegunka','zawroty głowy, omdlenie':'zawroty głowy','osłabienie, chudnięcie':'osłabienie','wysypka, zmiany skórne':'zmiany skórne'};
+
+/* guided questions naming several symptoms: chips pick which ones the patient reports (a tap also marks +) */
+const XQ={kp8:'niedawna infekcja|gorączka',kp11:'unieruchomienie|niedawna operacja|długa podróż',kp12:'jednostronny obrzęk|ból łydki',
+ ds4:'sinica|splątanie|senność',ks2:'utrata masy ciała|poty nocne',ks3:'katar|spływanie wydzieliny po tylnej ścianie gardła',
+ bb2:'wymioty krwią|wymioty fusowate|stolec smolisty',bb3:'zatrzymanie gazów|zatrzymanie stolca|wzdęcie',bb4:'gorączka|dreszcze|żółtaczka',
+ bw1:'mało moczu|suchość w ustach|zawroty przy wstawaniu',bw3:'gorączka >38,5 °C|silny ból brzucha',bw4:'objawy >7 dni|chudnięcie',
+ zm1:'gorączka >38 °C|dreszcze',zm3:'nudności|wymioty',zm6:'upławy|świąd|ból w okolicy pochwy',zm7:'nowy partner|kontakty bez zabezpieczenia',zm8:'cewnikowanie|zabieg urologiczny',zm9:'cukrzyca|immunosupresja',
+ bg2:'gorączka|sztywność karku|wysypka',bg3:'niedowład|zaburzenia mowy|zaburzenia widzenia|splątanie',bg5:'budzi w nocy|poranny z wymiotami|nasila się przy kaszlu',bg6:'pierwszy ból głowy po 50 r.ż.|zmiana charakteru bólu',bg7:'bolesność skroni|ból żuchwy przy żuciu|zaburzenia widzenia',bg8:'ciąża|połóg',bg9:'nowotwór|immunosupresja',bg10:'błyski|mroczki|zaburzenia czucia',bg11:'światłowstręt|nadwrażliwość na dźwięki|nudności',
+ zw1:'podczas wysiłku|w pozycji leżącej',zw2:'kołatanie|ból w klatce piersiowej',zw4:'podwójne widzenie|zaburzenia mowy|niedowład|niezborność',zw6:'nudności|poty|ciemno przed oczami',zw9:'drgawki|przygryzienie języka|nietrzymanie moczu|splątanie',zw10:'leki obniżające ciśnienie|leki moczopędne|nowe leki',
+ kl1:'omdlenie|zasłabnięcie',kl2:'ból w klatce piersiowej|duszność',kl4:'chudnięcie|nietolerancja ciepła|drżenie|nerwowość',kl5:'sympatykomimetyki|leki wziewne|lewotyroksyna|narkotyki',
+ gr1:'splątanie|senność',gr2:'sztywność karku|wysypka niebledniejąca',gr3:'duszność|szybki oddech',gr4:'immunosupresja|chemioterapia|brak śledziony',gr7:'ukąszenie kleszcza|kontakt ze zwierzętami',gr9:'ryzykowne kontakty seksualne|iniekcje dożylne',gr10:'niedawny zabieg|cewnik|implant|sztuczna zastawka',
+ bp1:'zaburzenia oddawania moczu|zaburzenia oddawania stolca|drętwienie krocza',bp3:'gorączka|iniekcje dożylne|immunosupresja',bp4:'nowotwór w wywiadzie|niezamierzona utrata masy ciała',bp5:'uraz|osteoporoza|przewlekłe glikokortykosteroidy',bp6:'ból nocny|ból spoczynkowy|nie ustępuje',
+ st2:'uraz|nie może obciążyć kończyny',st3:'wysypka|łuszczyca|zapalenie oka|afty|objaw Raynauda|suchość oczu i ust',st4:'biegunka|zapalenie cewki|zapalenie gardła',st5:'dna moczanowa|alkohol|leki moczopędne',st6:'ukąszenie kleszcza|rumień wędrujący',
+ ob2:'duszność|ból w klatce piersiowej',ob3:'pienisty mocz|obrzęki twarzy i powiek',ob4:'choroba wątroby|alkohol|powiększenie obwodu brzucha',ob5:'amlodypina|NLPZ (niesteroidowe leki przeciwzapalne)|glikokortykosteroidy',ob6:'senność|uczucie zimna|zaparcia|przyrost masy ciała',
+ os1:'osłabienie jednej strony ciała|opadnięcie kącika ust|zaburzenia mowy',os3:'poty nocne|gorączka',os4:'krwawienie z przewodu pokarmowego|obfite miesiączki',
+ wy1:'wybroczyny niebledniejące|gorączka',wy2:'pęcherze|złuszczanie skóry|zmiany na błonach śluzowych',wy3:'obrzęk twarzy|obrzęk języka|duszność',wy6:'kosmetyki|detergenty|rośliny|zwierzęta'};
+Object.entries(XQ).forEach(([id,o])=>{const i=ITEMS[id];if(i)i.q=[Q('Które',o)].concat(i.q||[])});
+const PSEC=PATHS.map(p=>p.sec);
+const pathOf=c=>{const e=PBY[(c.typ||[])[0]];return e?e.p:null};
+const cfgOf=c=>{const e=PBY[(c.typ||[])[0]];return e?Object.assign({},e.p,e.o):null};
+const chosen=()=>{const s=[];cur().cc.forEach(c=>{const p=pathOf(c);if(p&&p.items.length&&!s.includes(p))s.push(p)});return s};
+const ccGroups=c=>{const P=cfgOf(c),g=[];const a=(k,L,l,o,s,x)=>g.push(Object.assign({k,L,l,o:o.split('|'),s:!!s},x||{}));
+ if(!P)return g;
+ if(P.S)a('S','S',P.Sg?'Okolica brzucha':'Umiejscowienie',P.S,0,{g:P.Sg||''});
+ a('O','O','Początek',ONSET,1);a('O2','','Jak się zaczęło','nagle|stopniowo',1);
+ if(P.C)a('C','C','Charakter',P.C);
+ (P.C2||[]).forEach((x,n)=>a('C'+(n+2),'',x[0],x[1],x[2]));
+ if(P.R)a('R','R','Promieniowanie',P.R);
+ a('A','A','Objawy towarzyszące',ASSOC);
+ a('T','T','Przebieg w czasie','stały|napadowy|nawracający|narastający|ustępujący');
+ a('T2','','Pojedynczy epizod trwa','sekundy|<5 min|5–20 min|godziny|cały czas',1);
+ a('T3','','Pora','rano|w dzień|wieczorem|w nocy|bez związku');
+ a('E','E','Nasila',P.E||WORSE);a('E2','','Łagodzi',P.L||BETTER);
+ if(P.nrs)a('V','S','Nasilenie, NRS (Numeric Rating Scale)','0|1|2|3|4|5|6|7|8|9|10',1,{g:'nrs'});
+ else a('V','S','Nasilenie','łagodne|umiarkowane|ciężkie',1);
+ if(P.nyha)a('V2','','NYHA (New York Heart Association)','I|II|III|IV',1);
+ return g};
+/* clinical scores: binary criteria {k,l,p}, option criteria {k,l,o:[[label,pts]]}; auto(x) fills from patient data when known; src marks items needing exam or labs */
+const AGE=(n,lbl)=>({k:'age'+n,l:lbl||`Wiek ≥${n} lat`,p:1,auto:x=>x.age==null?null:x.age>=n});
+const CALCS={
+ bmi:{n:'BMI (wskaźnik masy ciała)',kind:'bmi'},
+ auditc:{n:'AUDIT-C (Alcohol Use Disorders Identification Test – Consumption)',h:'Porcja standardowa ≈ 10 g etanolu, np. piwo 250 ml, wino 100 ml, wódka 25 ml.',c:[
+  {k:'q1',l:'Jak często pije alkohol?',o:[['nigdy',0],['raz w miesiącu lub rzadziej',1],['2–4 razy w miesiącu',2],['2–3 razy w tygodniu',3],['≥4 razy w tygodniu',4]]},
+  {k:'q2',l:'Ile porcji w typowym dniu picia?',o:[['1–2',0],['3–4',1],['5–6',2],['7–9',3],['≥10',4]]},
+  {k:'q3',l:'Jak często ≥6 porcji przy jednej okazji?',o:[['nigdy',0],['rzadziej niż raz w miesiącu',1],['raz w miesiącu',2],['raz w tygodniu',3],['codziennie lub prawie codziennie',4]]}],
+  r:(s,x)=>{const c=x.sex==='K'?3:4;return s>=c?`wynik dodatni (próg ${x.sex?c:'3 u kobiet, 4 u mężczyzn'} pkt): picie ryzykowne, pogłęb wywiad pełnym AUDIT`:'wynik ujemny'}},
+ phq2:{n:'PHQ-2 (Patient Health Questionnaire-2)',h:'Ostatnie 2 tygodnie.',c:[
+  {k:'q1',l:'Małe zainteresowanie lub brak przyjemności z wykonywanych czynności',o:[['wcale',0],['kilka dni',1],['ponad połowę dni',2],['prawie codziennie',3]]},
+  {k:'q2',l:'Przygnębienie, obniżony nastrój, poczucie beznadziei',o:[['wcale',0],['kilka dni',1],['ponad połowę dni',2],['prawie codziennie',3]]}],
+  r:s=>s>=3?'wynik dodatni (≥3 pkt): pogłęb ocenę w kierunku depresji (PHQ-9, wywiad psychiatryczny), zapytaj o myśli samobójcze':'wynik ujemny'},
+ marburg:{n:'Marburg Heart Score',h:'Ból w klatce piersiowej w POZ (podstawowej opiece zdrowotnej): prawdopodobieństwo choroby wieńcowej.',c:[
+  {k:'a',l:'Kobieta ≥65 lat lub mężczyzna ≥55 lat',p:1,auto:x=>x.age==null||!x.sex?null:x.sex==='K'?x.age>=65:x.age>=55},
+  {k:'b',l:'Rozpoznana choroba naczyniowa (wieńcowa, naczyń mózgowych, tętnic obwodowych)',p:1},
+  {k:'c',l:'Ból nasila się przy wysiłku',p:1},
+  {k:'d',l:'Bólu nie da się wywołać uciskiem klatki piersiowej',p:1,src:'badanie'},
+  {k:'e',l:'Pacjent uważa, że ból pochodzi z serca',p:1}],
+  r:s=>s<=2?'niskie prawdopodobieństwo choroby wieńcowej jako przyczyny bólu':s===3?'pośrednie prawdopodobieństwo: dalsza diagnostyka':'wysokie prawdopodobieństwo: pilna diagnostyka kardiologiczna'},
+ wellsPE:{n:'Skala Wellsa – zatorowość płucna',h:'Kryteria i progi wg kalkulatora mp.pl (Interna Szczeklika): wersja oryginalna i uproszczona (każde kryterium 1 pkt).',c:[
+  {k:'e',l:'Przebyta ZŻG (zakrzepica żył głębokich) lub ZP (zatorowość płucna)',p:1.5},
+  {k:'d',l:'Operacja lub złamanie w ciągu ostatnich 4 tygodni',p:1.5},
+  {k:'g',l:'Aktywna choroba nowotworowa',p:1},
+  {k:'f',l:'Krwioplucie',p:1},
+  {k:'c',l:'Tętno >100/min',p:1.5,src:'badanie'},
+  {k:'a',l:'Objawy ZŻG',p:3,src:'badanie'},
+  {k:'b',l:'Inne rozpoznanie mniej prawdopodobne niż ZP',p:3}],
+  r:(s,x,v,n)=>`wersja oryginalna: prawdopodobieństwo ${s<2?'małe':s<7?'pośrednie':'duże'} (skala trzypoziomowa), ZP ${s<=4?'mało prawdopodobna':'prawdopodobna'} (dwupoziomowa); wersja uproszczona: ${n} pkt, ZP ${n>=2?'prawdopodobna':'mało prawdopodobna'}. Dalej (wg wersji oryginalnej): ${s<=4?'D-dimer':'angio-TK (angiografia metodą tomografii komputerowej) tętnic płucnych'}`},
+ wellsDVT:{n:'Skala Wellsa – zakrzepica żył głębokich',c:[
+  {k:'a',l:'Czynny nowotwór (leczony w ciągu 6 miesięcy lub paliatywnie)',p:1},
+  {k:'b',l:'Porażenie, niedowład lub unieruchomienie kończyny dolnej w opatrunku gipsowym',p:1},
+  {k:'c',l:'Unieruchomienie w łóżku ≥3 dni lub duża operacja w ciągu 12 tygodni',p:1},
+  {k:'d',l:'Tkliwość wzdłuż żył głębokich',p:1,src:'badanie'},
+  {k:'e',l:'Obrzęk całej kończyny dolnej',p:1,src:'badanie'},
+  {k:'f',l:'Obwód łydki większy o ≥3 cm niż po drugiej stronie',p:1,src:'badanie'},
+  {k:'g',l:'Obrzęk ciastowaty tylko na objawowej kończynie',p:1,src:'badanie'},
+  {k:'h',l:'Widoczne żyły powierzchowne krążenia obocznego (nie żylaki)',p:1,src:'badanie'},
+  {k:'i',l:'Przebyta ZŻG (zakrzepica żył głębokich)',p:1},
+  {k:'j',l:'Inne rozpoznanie co najmniej tak samo prawdopodobne jak ZŻG',p:-2}],
+  r:s=>s>=2?'ZŻG prawdopodobna (≥2 pkt): USG uciskowe żył':'ZŻG mało prawdopodobna (<2 pkt): oznacz D-dimer'},
+ crb65:{n:'CRB-65 (zapalenie płuc)',h:'Splątanie (Confusion), częstość oddechów (Respiratory rate), ciśnienie (Blood pressure), wiek ≥65.',c:[
+  {k:'c',l:'Nowe splątanie, zaburzenia orientacji',p:1},
+  {k:'r',l:'Częstość oddechów ≥30/min',p:1,src:'badanie'},
+  {k:'b',l:'Ciśnienie skurczowe <90 mmHg lub rozkurczowe ≤60 mmHg',p:1,src:'badanie'},
+  AGE(65)],
+  r:s=>s===0?'małe ryzyko zgonu: zwykle leczenie ambulatoryjne':s<=2?'umiarkowane ryzyko: rozważ leczenie w szpitalu':'duże ryzyko: pilna hospitalizacja'},
+ mcisaac:{n:'Skala Centora w modyfikacji McIsaaca (ból gardła)',c:[
+  {k:'t',l:'Gorączka >38 °C',p:1},
+  {k:'k',l:'Brak kaszlu',p:1},
+  {k:'w',l:'Powiększone, tkliwe węzły chłonne szyjne przednie',p:1,src:'badanie'},
+  {k:'m',l:'Obrzęk lub wysięk na migdałkach',p:1,src:'badanie'},
+  {k:'a',l:'Wiek',o:[['3–14 lat',1],['15–44 lat',0],['≥45 lat',-1]],auto:x=>x.age==null?null:x.age<15?'3–14 lat':x.age<45?'15–44 lat':'≥45 lat'}],
+  r:s=>s<=1?'zakażenie paciorkowcowe mało prawdopodobne: bez testu i bez antybiotyku':'wykonaj szybki test antygenowy lub posiew wymazu z gardła; antybiotyk przy wyniku dodatnim'},
+ alvarado:{n:'Skala Alvarado (zapalenie wyrostka robaczkowego)',h:'Bez wyników laboratoryjnych maksymalnie 7 pkt.',c:[
+  {k:'a',l:'Wędrówka bólu do prawego dołu biodrowego',p:1},
+  {k:'b',l:'Brak łaknienia',p:1},
+  {k:'c',l:'Nudności lub wymioty',p:1},
+  {k:'d',l:'Tkliwość w prawym dole biodrowym',p:2,src:'badanie'},
+  {k:'e',l:'Objaw Blumberga (bolesność przy nagłym zwolnieniu ucisku)',p:1,src:'badanie'},
+  {k:'f',l:'Temperatura ≥37,3 °C',p:1},
+  {k:'g',l:'Leukocytoza >10 000/µl',p:2,src:'lab'},
+  {k:'h',l:'Neutrofilia >75% (przesunięcie w lewo)',p:1,src:'lab'}],
+  r:s=>s<=4?'zapalenie wyrostka mało prawdopodobne':s<=6?'zapalenie wyrostka możliwe: obserwacja, badanie obrazowe':s<=8?'zapalenie wyrostka prawdopodobne: konsultacja chirurgiczna':'zapalenie wyrostka bardzo prawdopodobne: pilna konsultacja chirurgiczna'},
+ ottawa:{n:'Reguła Ottawa dla krwotoku podpajęczynówkowego',unit:'kryt.',h:'Tylko u przytomnych pacjentów ≥15 lat z nowym, silnym, nieurazowym bólem głowy, który osiągnął szczyt w ciągu godziny. Nie stosuj przy nowych objawach ogniskowych, przebytym tętniaku lub krwotoku podpajęczynówkowym, guzie mózgu i nawracających podobnych bólach.',c:[
+  AGE(40),
+  {k:'n',l:'Ból lub sztywność karku',p:1},
+  {k:'l',l:'Utrata przytomności przy świadkach',p:1},
+  {k:'e',l:'Początek podczas wysiłku',p:1},
+  {k:'t',l:'Ból „piorunujący”, od razu maksymalny',p:1},
+  {k:'f',l:'Ograniczone zgięcie szyi w badaniu',p:1,src:'badanie'}],
+  r:s=>s>=1?'reguła dodatnia: krwotoku podpajęczynówkowego nie można wykluczyć, potrzebna TK (tomografia komputerowa) głowy, ewentualnie nakłucie lędźwiowe':'reguła ujemna: krwotok podpajęczynówkowy mało prawdopodobny, o ile spełnione są warunki stosowania'},
+ abcd2:{n:'ABCD2 (ryzyko udaru po TIA, przemijającym napadzie niedokrwiennym)',c:[
+  AGE(60),
+  {k:'b',l:'Ciśnienie ≥140/90 mmHg przy pierwszym pomiarze',p:1,src:'badanie'},
+  {k:'c',l:'Objawy kliniczne',o:[['jednostronny niedowład',2],['zaburzenia mowy bez niedowładu',1],['inne',0]]},
+  {k:'d',l:'Czas trwania objawów',o:[['≥60 min',2],['10–59 min',1],['<10 min',0]]},
+  {k:'e',l:'Cukrzyca',p:1}],
+  r:s=>`${s<=3?'małe':s<=5?'umiarkowane':'duże'} ryzyko udaru w ciągu 2 dni; niezależnie od wyniku każdy TIA wymaga pilnej diagnostyki`},
+ cha2ds2va:{n:'CHA₂DS₂-VA (migotanie przedsionków, ryzyko udaru)',h:'Wersja z wytycznych ESC (European Society of Cardiology) 2024, bez punktu za płeć; definicje wg mp.pl.',c:[
+  {k:'c',l:'Przewlekła niewydolność serca',ch:'objawy niewydolności serca niezależnie od LVEF (frakcji wyrzutowej lewej komory) albo LVEF ≤40% bez objawów',p:1},
+  {k:'h',l:'Nadciśnienie tętnicze',ch:'>140/90 mmHg w ≥2 pomiarach przy różnych okazjach lub leczenie hipotensyjne',p:1},
+  {k:'a2',l:'Wiek ≥75 lat',p:2,auto:x=>x.age==null?null:x.age>=75},
+  {k:'d',l:'Cukrzyca',ch:'typu 1 lub 2 albo leczenie hipoglikemizujące',p:1},
+  {k:'s',l:'Przebyty udar mózgu, TIA lub inny incydent zakrzepowo-zatorowy',p:2},
+  {k:'v',l:'Choroba naczyniowa',ch:'choroba wieńcowa (zawał, dławica, rewaskularyzacja, istotne zwężenia w obrazowaniu) albo choroba tętnic obwodowych (chromanie, rewaskularyzacja, operacja aorty brzusznej) albo złożona blaszka w aorcie',p:1},
+  {k:'a',l:'Wiek 65–74 lat',p:1,auto:x=>x.age==null?null:x.age>=65&&x.age<75}],
+  r:(s,x)=>(s===0?'doustna antykoagulacja niezalecana':s===1?'należy rozważyć doustny lek przeciwkrzepliwy':'zalecany doustny lek przeciwkrzepliwy')+(x.sex==='K'?`; w starszej skali CHA₂DS₂-VASc: ${s+1} pkt`:'')},
+ hasbled:{n:'HAS-BLED (ryzyko krwawienia przy antykoagulacji)',h:'Definicje wg mp.pl. Wytyczne ESC 2024 nie zalecają już skal (w tym HAS-BLED) do oceny ryzyka krwawienia; służy raczej do wychwycenia czynników modyfikowalnych.',c:[
+  {k:'h',l:'Nadciśnienie tętnicze',ch:'ciśnienie skurczowe >160 mmHg',p:1},
+  {k:'n',l:'Nieprawidłowa czynność nerek',ch:'przewlekła dializoterapia, przeszczepiona nerka lub kreatynina >200 µmol/l',p:1},
+  {k:'w',l:'Nieprawidłowa czynność wątroby',ch:'przewlekła choroba wątroby (np. marskość) lub bilirubina >2× GGN (górna granica normy) z ALT/AST/ALP >3× GGN',p:1},
+  {k:'s',l:'Przebyty udar mózgu',ch:'niedokrwienny lub krwotoczny; przy krwotocznym zaznacz też krwawienie',p:1},
+  {k:'b',l:'Krwawienie',ch:'poważne krwawienie w wywiadzie lub predyspozycja (skaza krwotoczna, niedokrwistość)',p:1},
+  {k:'l',l:'Niestabilne INR',ch:'tylko u przyjmujących antagonistę witaminy K: duże wahania lub często poza zakresem (TTR <60%)',p:1},
+  {k:'e',l:'Wiek >65 lat',p:1,auto:x=>x.age==null?null:x.age>65},
+  {k:'d',l:'Leki',ch:'jednocześnie leki przeciwpłytkowe lub NLPZ (niesteroidowe leki przeciwzapalne)',p:1},
+  {k:'a',l:'Alkohol',ch:'nadmierne spożycie, >14 jednostek tygodniowo',p:1}],
+  r:s=>s>=3?'duże ryzyko krwawienia: skoryguj czynniki modyfikowalne i częściej kontroluj; sam wynik nie przekreśla antykoagulacji':'małe ryzyko krwawienia'},
+ qsofa:{n:'qSOFA (quick Sequential Organ Failure Assessment)',c:[
+  {k:'r',l:'Częstość oddechów ≥22/min',p:1,src:'badanie'},
+  {k:'m',l:'Zaburzenia świadomości',p:1},
+  {k:'b',l:'Ciśnienie skurczowe ≤100 mmHg',p:1,src:'badanie'}],
+  r:s=>s>=2?'zwiększone ryzyko złego rokowania przy zakażeniu: oceń w kierunku sepsy (SOFA), pilne postępowanie':'wynik <2 nie wyklucza sepsy'},
+ geneva:{n:'Zmodyfikowana skala genewska – zatorowość płucna',h:'Kryteria i progi wg kalkulatora mp.pl (Interna Szczeklika): wersja oryginalna i uproszczona.',c:[
+  {k:'b',l:'Przebyta ZŻG (zakrzepica żył głębokich) lub ZP (zatorowość płucna)',p:3,q:1},
+  {k:'c',l:'Operacja lub złamanie w ciągu ostatnich 4 tygodni',p:2,q:1},
+  {k:'d',l:'Aktywna choroba nowotworowa',p:2,q:1},
+  {k:'a',l:'Wiek >65 lat',p:1,q:1,auto:x=>x.age==null?null:x.age>65},
+  {k:'e',l:'Jednostronny ból kończyny dolnej',p:3,q:1},
+  {k:'f',l:'Krwioplucie',p:2,q:1},
+  {k:'g',l:'Tętno',o:[['<75/min',0,0],['75–94/min',3,1],['≥95/min',5,2]],src:'badanie'},
+  {k:'h',l:'Bolesność żył głębokich kończyny dolnej przy palpacji i jednostronny obrzęk',p:4,q:1,src:'badanie'}],
+  r:(s,x,v,n)=>`wersja oryginalna: prawdopodobieństwo ${s<=3?'małe':s<=10?'pośrednie':'duże'}, ZP ${s<=5?'mało prawdopodobna':'prawdopodobna'}; wersja uproszczona: ${n} pkt, prawdopodobieństwo ${n<=1?'małe':n<=4?'pośrednie':'duże'}, ZP ${n<=2?'mało prawdopodobna':'prawdopodobna'}`},
+ stopbang:{n:'STOP-Bang (obturacyjny bezdech senny, OBS)',h:'Wersja z kalkulatora OBS na mp.pl. Reguły dużego ryzyka wg pracy źródłowej (Chung i wsp., J Clin Sleep Med 2014): ≥2 odpowiedzi TAK w części STOP plus BMI >35, płeć męska lub duży obwód szyi (mp.pl podaje błędnie „>2”).',c:[
+  {k:'s',l:'Chrapanie słychać przez zamknięte drzwi albo partner budzi z powodu chrapania',p:1,stop:1},
+  {k:'t',l:'Często zmęczony, wyczerpany lub senny w ciągu dnia',p:1,stop:1},
+  {k:'o',l:'Ktoś zauważył przerwy w oddychaniu, krztuszenie się lub dławienie we śnie',p:1,stop:1},
+  {k:'p',l:'Nadciśnienie tętnicze',p:1,stop:1},
+  {k:'b',l:'BMI >35 kg/m²',p:1,auto:x=>x.bmi==null?null:x.bmi>35},
+  {k:'a',l:'Wiek >50 lat',p:1,auto:x=>x.age==null?null:x.age>50},
+  {k:'n',l:'Obwód szyi',o:[['≤40 cm',0],['41–42 cm',1],['≥43 cm',1]],src:'badanie'},
+  {k:'g',l:'Płeć męska',p:1,auto:x=>!x.sex?null:x.sex==='M'}],
+  r:(s,x,v)=>{const st=['s','t','o','p'].filter(k=>v[k]).length,neck=v.n==='≥43 cm'||(v.n==='41–42 cm'&&x.sex==='K'),hi=s>=5||(st>=2&&(v.b||neck||v.g));
+   return hi?`duże ryzyko OBS${s<5?` (TAK na ${st} pytania STOP oraz ${[v.b&&'BMI >35',neck&&'duży obwód szyi',v.g&&'płeć męska'].filter(Boolean).join(', ')})`:''}: skieruj na badanie snu`:s>=3?'pośrednie ryzyko OBS':'niskie ryzyko OBS'}},
+ barthel:{n:'Skala Barthel (samodzielność w czynnościach dnia codziennego)',c:[
+  {k:'a',l:'Spożywanie posiłków',o:[['niezdolny',0],['potrzebuje pomocy',5],['samodzielny',10]]},
+  {k:'b',l:'Przemieszczanie się z łóżka na krzesło i z powrotem, siadanie',o:[['niezdolny',0],['duża pomoc, potrafi siedzieć',5],['mniejsza pomoc',10],['samodzielny',15]]},
+  {k:'c',l:'Higiena osobista (twarz, zęby, golenie, włosy)',o:[['potrzebuje pomocy',0],['samodzielny',5]]},
+  {k:'d',l:'Korzystanie z toalety',o:[['zależny',0],['potrzebuje częściowej pomocy',5],['samodzielny',10]]},
+  {k:'e',l:'Mycie, kąpiel całego ciała',o:[['zależny',0],['samodzielny',5]]},
+  {k:'f',l:'Poruszanie się po powierzchni płaskiej',o:[['nie porusza się lub <50 m',0],['na wózku >50 m',5],['spacer z pomocą >50 m',10],['samodzielny >50 m',15]]},
+  {k:'g',l:'Wchodzenie i schodzenie po schodach',o:[['niezdolny',0],['potrzebuje pomocy',5],['samodzielny',10]]},
+  {k:'h',l:'Ubieranie i rozbieranie się',o:[['zależny',0],['potrzebuje częściowej pomocy',5],['samodzielny',10]]},
+  {k:'i',l:'Kontrolowanie stolca',o:[['nie kontroluje',0],['czasami popuszcza',5],['kontroluje',10]]},
+  {k:'j',l:'Kontrolowanie moczu',o:[['nie kontroluje lub cewnik',0],['czasami popuszcza',5],['kontroluje',10]]}],
+  r:s=>s<=20?'stan pacjenta bardzo ciężki, całkowicie zależny':s<=85?'stan średnio ciężki, częściowo zależny':'stan lekki, w dużej mierze samodzielny'},
+ cadptl:{n:'Prawdopodobieństwo istotnej choroby wieńcowej (model RF-CL, ESC 2024)',kind:'link',url:'https://www.mp.pl/kalkulatory/367646,prawdopodobienstwo-istotnej-choroby-wiencowej',h:'Model opiera się na tabelach z wytycznych ESC (wiek, płeć, charakter bólu lub duszność, liczba czynników ryzyka). Nie odtwarzam go z pamięci, żeby nie podać błędnych wartości; licz na mp.pl (wymaga zalogowania). ≤5%: rozważ odstąpienie od diagnostyki; >5–15%: skoryguj o dodatkowe dane lub CACS; wyżej: badania nieinwazyjne.'},
+ gcaps:{n:'GCAPS – prawdopodobieństwo olbrzymiokomórkowego zapalenia tętnic',kind:'link',url:'https://www.mp.pl/kalkulatory/439892,GCAPS',h:'Wieloskładnikowa skala z wynikami badań; licz na mp.pl (wymaga zalogowania).'},
+ mmrc:{n:'Skala duszności mMRC (modified Medical Research Council)',c:[
+  {k:'s',l:'Stopień duszności',o:[['0: tylko przy dużym wysiłku',0],['1: przy szybkim marszu po płaskim lub pod niewielkie wzniesienie',1],['2: chodzi wolniej niż rówieśnicy lub musi się zatrzymywać',2],['3: zatrzymuje się po ok. 100 m lub kilku minutach marszu',3],['4: nie wychodzi z domu, duszność przy ubieraniu',4]]}],
+  r:s=>s>=2?'duszność istotna (≥2): w POChP (przewlekłej obturacyjnej chorobie płuc) kwalifikuje do grupy z większym nasileniem objawów wg GOLD':'mniej nasilona duszność'}
+};
+const PCALC={klatka:['marburg','cadptl','wellsPE','geneva'],dusznosc:['wellsPE','geneva','mmrc','crb65'],kaszel:['crb65','mcisaac'],brzuch:['alvarado'],zum:['qsofa'],glowa:['ottawa','gcaps'],zawroty:['abcd2'],kolatanie:['cha2ds2va','hasbled'],goraczka:['qsofa','crb65'],obrzeki:['wellsDVT'],oslabienie:['abcd2','phq2','barthel','stopbang']};
+const SCALC={subst:['auditc'],physio:['bmi','phq2','stopbang']};
+const cx=()=>{const d=cur(),b=d.calc&&d.calc.bmi?bmiOf(d.calc.bmi):null;return{age:age(),sex:SEX(),bmi:b?b.b:null}};
+const cst=id=>{const d=cur();d.calc=d.calc||{};return d.calc[id]=d.calc[id]||{}};
+const fnum=v=>String(Math.round(v*10)/10).replace('.',',');
+const critVal=(C,c,st,x)=>{const a=c.auto?c.auto(x):null;const v=a!=null?a:st[c.k];if(c.o){const o=c.o.find(o=>o[0]===v);return{v,pts:o?o[1]:0,q:o&&o[2]!=null?o[2]:(o&&o[1]?1:0),auto:a!=null}}return{v:!!v,pts:v?c.p:0,q:v?(c.q!=null?c.q:1):0,auto:a!=null}};
+const bmiOf=st=>{const w=parseFloat(String(st.w||'').replace(',','.')),h=parseFloat(String(st.h||'').replace(',','.'))/100;if(!(w>0&&h>0))return null;const b=w/(h*h);return{b,cat:b<18.5?'niedowaga':b<25?'masa ciała prawidłowa':b<30?'nadwaga':b<35?'otyłość I stopnia':b<40?'otyłość II stopnia':'otyłość III stopnia'}};
+const calcRes=id=>{const C=CALCS[id],st=cst(id),x=cx();
+ if(C.kind==='link')return{score:'',txt:'',touched:false};
+ if(C.kind==='bmi'){const r=bmiOf(st);return r?{score:fnum(r.b)+' kg/m²',txt:r.cat+' (kategorie WHO)',touched:true}:{score:'–',txt:'wpisz masę i wzrost',touched:false}}
+ let s=0,n=0,anyOpt=true;const v={};C.c.forEach(c=>{const r=critVal(C,c,st,x);s+=r.pts;n+=r.q;v[c.k]=r.v;if(c.o&&r.v==null)anyOpt=false});
+ const touched=Object.keys(st).length>0;
+ return{s,score:fnum(s)+' '+(C.unit||'pkt'),txt:anyOpt?C.r(s,x,v,n):'zaznacz odpowiedzi we wszystkich pytaniach z wyborem',touched,complete:anyOpt}};
+const SRC={badanie:'badanie',lab:'laboratorium'};
+const calcHTML=id=>{const C=CALCS[id],st=cst(id),x=cx(),R=calcRes(id);
+ if(C.kind==='link')return `<div class="calc" data-calc="${id}"><div class="chd"><b>${esc(C.n)}</b><a class="btn ghost" href="${C.url}" target="_blank" rel="noopener">Otwórz na mp.pl ↗</a></div><p class="hint" style="margin:0">${esc(C.h)}</p></div>`;
+ let body='';
+ if(C.kind==='bmi')body=`<div class="flds"><label class="f">Masa ciała (kg)<input type="number" inputmode="decimal" data-bmi="w" value="${esc(st.w||'')}"></label><label class="f">Wzrost (cm)<input type="number" inputmode="decimal" data-bmi="h" value="${esc(st.h||'')}"></label></div>`;
+ else body=`<div class="critl">${C.c.map(c=>{const r=critVal(C,c,st,x),tag=c.src?`<span class="badge">${SRC[c.src]}</span>`:'';
+  if(c.o)return `<div class="cg"><span class="cl">${esc(c.l)}${tag}${r.auto?'<span class="hint">z danych pacjenta</span>':''}</span><div class="cs">${c.o.map(o=>`<button class="chip" data-cro="${id}|${c.k}" data-o="${esc(o[0])}" aria-pressed="${r.v===o[0]}"${r.auto?' disabled':''}>${esc(o[0])} <small>(${o[1]>0?'+':''}${fnum(o[1])})</small></button>`).join('')}</div></div>`;
+  if(r.auto)return `<div class="crit auto" aria-pressed="${r.v}"><span>${esc(c.l)} <span class="hint">z danych pacjenta: ${r.v?'tak':'nie'}</span></span><span class="pts">${r.v?'+'+fnum(c.p):'0'}</span></div>`;
+  return `<button class="crit" data-crit="${id}|${c.k}" aria-pressed="${r.v}"><span>${esc(c.l)}${tag}${c.ch?`<span class="chint">${esc(c.ch)}</span>`:''}</span><span class="pts">${c.p>0?'+':''}${fnum(c.p)}</span></button>`}).join('')}</div>`;
+ return `<div class="calc" data-calc="${id}"><div class="chd"><b>${esc(C.n)}</b><span class="res">${esc(R.score)}</span></div>${C.h?`<p class="hint" style="margin:0">${esc(C.h)}</p>`:''}${body}<p class="interp">→ ${esc(R.txt)}</p></div>`};
+const calcsBlock=ids=>ids&&ids.length?`<h3>Skale i kalkulatory</h3>${ids.map(calcHTML).join('')}`:'';
+const recalc=id=>document.querySelectorAll(`.calc[data-calc="${id}"]`).forEach(el=>{el.outerHTML=calcHTML(id)});
+const calcNodes=()=>{const out=[],x=cx();Object.keys(CALCS).forEach(id=>{const C=CALCS[id];if(C.kind==='link')return;const R=calcRes(id);if(!R.touched)return;
+ let crit='';if(!C.kind){const st=cst(id);crit=C.c.map(c=>{const r=critVal(C,c,st,x);if(c.o)return r.v!=null?`${lc(c.l).replace(/\?$/,'')}: ${r.v}`:'';return r.v?lc(c.l):''}).filter(Boolean).join('; ')}
+ else{const st=cst(id);crit=`masa ciała ${st.w||'?'} kg, wzrost ${st.h||'?'} cm`}
+ out.push({name:C.n,det:`${R.score}: ${R.txt}${crit?`; ${UL('kryteria')}: ${crit}`:''}`})});
+ return out.length?[{t:'h',s:'Skale i kalkulatory'},{t:'qo',items:out.map(o=>({name:o.name,det:o.det}))}]:[]};
+
+const DRUGS=["acenokumarol", "allopurynol", "alprazolam", "amiodaron", "amlodypina", "amoksycylina", "amoksycylina + kwas klawulanowy", "apiksaban", "atorwastatyna", "azytromycyna", "betahistyna", "bilastyna", "bisoprolol", "budezonid", "budezonid + formoterol", "budezonid z formoterolem", "bupropion", "cefuroksym", "cetyryzyna", "chlorochina", "cholekalcyferol (witamina D3)", "cilazapryl", "ciprofloksacyna", "citalopram", "dabigatran", "dapagliflozyna", "deksametazon", "deksketoprofen", "desloratadyna", "diazepam", "digoksyna", "diklofenak", "doksazosyna", "doksycyklina", "donepezil", "drotaweryna", "dulaglutyd", "duloksetyna", "empagliflozyna", "enalapryl", "eplerenon", "escitalopram", "esomeprazol", "ezetymib", "febuksostat", "fenofibrat", "finasteryd", "fluoksetyna", "flutykazon", "flutykazon z salmeterolem", "fosfomycyna", "furosemid", "gabapentyna", "gliklazyd", "glimepiryd", "hydrochlorotiazyd", "hydroksyzyna", "ibuprofen", "indapamid", "insulina", "insulina aspart", "insulina degludec", "insulina detemir", "insulina glargine", "insulina glulizynowa", "insulina lizpro", "insulina ludzka", "iwabradyna", "kandesartan", "karbamazepina", "karwedilol", "ketoprofen", "klarytromycyna", "klindamycyna", "klopidogrel", "kotrimoksazol", "kwas acetylosalicylowy", "kwas foliowy", "kwetiapina", "laktuloza", "lamotrygina", "lanzoprazol", "lerkanidypina", "lewetyracetam", "lewodopa + benserazyd", "lewodopa + karbidopa", "lewofloksacyna", "lewotyroksyna", "liraglutyd", "lizynopryl", "loperamid", "loratadyna", "lorazepam", "losartan", "mebeweryna", "meloksykam", "memantyna", "metamizol", "metformina", "metoprolol", "metotreksat", "metyloprednizolon", "mirtazapina", "moksonidyna", "mometazon", "monoazotan izosorbidu", "montelukast", "naproksen", "nebiwolol", "nimesulid", "nitrogliceryna", "olanzapina", "omeprazol", "pankreatyna", "pantoprazol", "paracetamol", "paroksetyna", "perindopryl", "potas", "potas (chlorek potasu)", "prasugrel", "prednizon", "pregabalina", "propafenon", "ramipryl", "rosuwastatyna", "rywaroksaban", "sakubitryl + walsartan", "salbutamol", "salmeterol + flutykazon", "semaglutyd", "sertralina", "simwastatyna", "sitagliptyna", "spironolakton", "tamsulosyna", "telmisartan", "tiamazol", "tikagrelor", "tiotropium", "torasemid", "tramadol", "trazodon", "trimetazydyna", "urapidyl", "walproinian", "walsartan", "warfaryna", "wenlafaksyna", "witamina D3", "zofenopryl", "zolpidem", "żelazo", "Abasaglar (insulina glargine)", "Acard (kwas acetylosalicylowy)", "Acenocumarol WZF (acenokumarol)", "Actrapid (insulina ludzka)", "Adenuric (febuksostat)", "Aerius (desloratadyna)", "Afobam (alprazolam)", "Agen (amlodypina)", "Aglan (meloksykam)", "Allertec (cetyryzyna)", "Allupol (allopurynol)", "Alprox (alprazolam)", "Amaryl (glimepiryd)", "Amertil (cetyryzyna)", "Amizepin (karbamazepina)", "Amlonor (amlodypina)", "Amlozek (amlodypina)", "Amoksiklav (amoksycylina + kwas klawulanowy)", "Amotaks (amoksycylina)", "Ampril (ramipryl)", "Anapran (naproksen)", "Anesteloc (pantoprazol)", "Apap (paracetamol)", "Apidra (insulina glulizynowa)", "Arechin (chlorochina)", "Areplex (klopidogrel)", "Aricept (donepezil)", "Arketis (paroksetyna)", "Asentra (sertralina)", "Aspirin (kwas acetylosalicylowy)", "Aspirin Cardio (kwas acetylosalicylowy)", "Atacand (kandesartan)", "Atarax (hydroksyzyna)", "Atoris (atorwastatyna)", "Atorvasterol (atorwastatyna)", "Atorvox (atorwastatyna)", "Atram (karwedilol)", "Augmentin (amoksycylina + kwas klawulanowy)", "Aulin (nimesulid)", "Avamina (metformina)", "Avamys (flutykazon)", "Azitrox (azytromycyna)", "Bespres (walsartan)", "Betaloc ZOK (metoprolol)", "Betaserc (betahistyna)", "Bibloc (bisoprolol)", "Bilaxten (bilastyna)", "Bioprazol (omeprazol)", "Bioxetin (fluoksetyna)", "Biseptol (kotrimoksazol)", "Bisocard (bisoprolol)", "Bisoratio (bisoprolol)", "Bixebra (iwabradyna)", "Brilique (tikagrelor)", "Calpol (paracetamol)", "Candepres (kandesartan)", "Cardura (doksazosyna)", "Ciprinol (ciprofloksacyna)", "Cipronex (ciprofloksacyna)", "Citabax (citalopram)", "Cital (citalopram)", "Claritine (loratadyna)", "Clatra (bilastyna)", "Concor (bisoprolol)", "Controloc (pantoprazol)", "Convulex (walproinian)", "Cordarone (amiodaron)", "Coronal (bisoprolol)", "Coryol (karwedilol)", "Cozaar (losartan)", "Crestor (rosuwastatyna)", "Cymbalta (duloksetyna)", "Dalacin (klindamycyna)", "Dalacin C (klindamycyna)", "Depakine Chrono (walproinian)", "Devikap (cholekalcyferol (witamina D3))", "Dexak (deksketoprofen)", "Dexaven (deksametazon)", "Diagen (gliklazyd)", "Diaprel MR (gliklazyd)", "Dilatrend (karwedilol)", "Diovan (walsartan)", "Diuver (torasemid)", "Duomox (amoksycylina)", "Duphalac (laktuloza)", "Duspatalin (mebeweryna)", "Ebixa (memantyna)", "Ebrantil (urapidyl)", "Efectin (wenlafaksyna)", "Efferalgan (paracetamol)", "Effox (monoazotan izosorbidu)", "Efient (prasugrel)", "Elicea (escitalopram)", "Eliquis (apiksaban)", "Emanera (esomeprazol)", "Enarenal (enalapryl)", "Encorton (prednizon)", "Entresto (sakubitryl + walsartan)", "Euthyrox (lewotyroksyna)", "Ezehron (ezetymib)", "Finlepsin (karbamazepina)", "Fokusin (tamsulosyna)", "Formetic (metformina)", "Forxiga (dapagliflozyna)", "Fromilid (klarytromycyna)", "Gensulin (insulina ludzka)", "Glibetic (glimepiryd)", "Gliclada (gliklazyd)", "Glucophage (metformina)", "Glucophage XR (metformina)", "Helicid (omeprazol)", "Humalog (insulina lizpro)", "Humulin (insulina ludzka)", "Hydroxyzinum (hydroksyzyna)", "Hypnogen (zolpidem)", "Ibufen (ibuprofen)", "Ibum (ibuprofen)", "Ibuprom (ibuprofen)", "Indapen (indapamid)", "Indix (indapamid)", "Inspra (eplerenon)", "Januvia (sitagliptyna)", "Jardiance (empagliflozyna)", "Kaldyum (potas (chlorek potasu))", "Kalipoz prolongatum (potas (chlorek potasu))", "Karbis (kandesartan)", "Keppra (lewetyracetam)", "Ketonal (ketoprofen)", "Ketrel (kwetiapina)", "Klabax (klarytromycyna)", "Klacid (klarytromycyna)", "Kreon (pankreatyna)", "Kventiax (kwetiapina)", "Lamitrin (lamotrygina)", "Lamotrix (lamotrygina)", "Lantus (insulina glargine)", "Lanzul (lanzoprazol)", "Laremid (loperamid)", "Lercan (lerkanidypina)", "Letrox (lewotyroksyna)", "Levemir (insulina detemir)", "Lisiprol (lizynopryl)", "Lorafen (lorazepam)", "Lorista (losartan)", "Losacor (losartan)", "Losec (omeprazol)", "Lozap (losartan)", "Lyrica (pregabalina)", "Madopar (lewodopa + benserazyd)", "Majamil (diklofenak)", "Medrol (metyloprednizolon)", "Metex (metotreksat)", "Metformax (metformina)", "Metizol (tiamazol)", "Metocard (metoprolol)", "Metocard ZK (metoprolol)", "Metypred (metyloprednizolon)", "Micardis (telmisartan)", "Milukante (montelukast)", "Milurit (allopurynol)", "Mirzaten (mirtazapina)", "Mixtard (insulina ludzka)", "Monkasta (montelukast)", "Mononit (monoazotan izosorbidu)", "Monural (fosfomycyna)", "Movalis (meloksykam)", "Mozarin (escitalopram)", "Nakom (lewodopa + karbidopa)", "Nalgesin (naproksen)", "Nasonex (mometazon)", "Nebicard (nebiwolol)", "Nebilet (nebiwolol)", "Nebivor (nebiwolol)", "Neurontin (gabapentyna)", "Nexium (esomeprazol)", "Nimesil (nimesulid)", "Nitromint (nitrogliceryna)", "No-Spa (drotaweryna)", "Nolpaza (pantoprazol)", "Norvasc (amlodypina)", "NovoRapid (insulina aspart)", "Nurofen (ibuprofen)", "Olfen (diklofenak)", "Olzapin (olanzapina)", "Omnic (tamsulosyna)", "Opacorden (amiodaron)", "Opokan (meloksykam)", "Ospamox (amoksycylina)", "Ozempic (semaglutyd)", "Panadol (paracetamol)", "Panrazol (pantoprazol)", "Physiotens (moksonidyna)", "Piramil (ramipryl)", "Plavix (klopidogrel)", "Polfenon (propafenon)", "Polhumin (insulina ludzka)", "Polocard (kwas acetylosalicylowy)", "Polopiryna (kwas acetylosalicylowy)", "Polprazol (omeprazol)", "Polpril (ramipryl)", "Poltram (tramadol)", "Polvertic (betahistyna)", "Pradaxa (dabigatran)", "Preductal (trimetazydyna)", "Preductal MR (trimetazydyna)", "Prenessa (perindopryl)", "Prestarium (perindopryl)", "Procoralan (iwabradyna)", "Proscar (finasteryd)", "Pulmicort (budezonid)", "Pyralgin (metamizol)", "Raenom (iwabradyna)", "Relanium (diazepam)", "Remirta (mirtazapina)", "Rexetin (paroksetyna)", "Romazic (rosuwastatyna)", "Rosucard (rosuwastatyna)", "Rosutrox (rosuwastatyna)", "Roswera (rosuwastatyna)", "Rybelsus (semaglutyd)", "Rytmonorm (propafenon)", "Salmex (salmeterol + flutykazon)", "Saxenda (liraglutyd)", "Seretide (salmeterol + flutykazon)", "Seronil (fluoksetyna)", "Seroxat (paroksetyna)", "Sertagen (sertralina)", "Simvacard (simwastatyna)", "Simvasterol (simwastatyna)", "Singulair (montelukast)", "Sintrom (acenokumarol)", "Siofor (metformina)", "Sobycor (bisoprolol)", "Sorbifer Durules (żelazo)", "Sortis (atorwastatyna)", "Spiriva (tiotropium)", "Spironol (spironolakton)", "Stilnox (zolpidem)", "Stimuloton (sertralina)", "Stoperan (loperamid)", "Sumamed (azytromycyna)", "Suvardio (rosuwastatyna)", "Symazide (gliklazyd)", "Symbicort (budezonid + formoterol)", "Tamsudil (tamsulosyna)", "Tardyferon (żelazo)", "Taromentin (amoksycylina + kwas klawulanowy)", "Tavanic (lewofloksacyna)", "Tegretol (karbamazepina)", "Telmizek (telmisartan)", "Tenox (amlodypina)", "Tertensif SR (indapamid)", "Thyrozol (tiamazol)", "Tolura (telmisartan)", "Torvacard (atorwastatyna)", "Toujeo (insulina glargine)", "Tramal (tramadol)", "Tresiba (insulina degludec)", "Trexan (metotreksat)", "Trifas (torasemid)", "Tritace (ramipryl)", "Trittico (trazodon)", "Trombex (klopidogrel)", "Trulicity (dulaglutyd)", "Tulip (atorwastatyna)", "Unidox (doksycyklina)", "Valsacor (walsartan)", "Vasilip (simwastatyna)", "Velaxin (wenlafaksyna)", "Ventolin (salbutamol)", "Verospiron (spironolakton)", "Victoza (liraglutyd)", "Vigantoletten (cholekalcyferol (witamina D3))", "Vivace (ramipryl)", "Vivacor (karwedilol)", "Voltaren (diklofenak)", "Warfin (warfaryna)", "Wegovy (semaglutyd)", "Xanax (alprazolam)", "Xarelto (rywaroksaban)", "Xartan (losartan)", "Yasnal (donepezil)", "Zahron (rosuwastatyna)", "Zinnat (cefuroksym)", "Zocor (simwastatyna)", "Zofenil (zofenopryl)", "Zoloft (sertralina)", "Zyllt (klopidogrel)", "Zyprexa (olanzapina)", "Zyrtec (cetyryzyna)"];
+const ALLERG='penicyliny|cefalosporyny|sulfonamidy|NLPZ (niesteroidowe leki przeciwzapalne)|kwas acetylosalicylowy|metamizol|jodowe środki kontrastowe|jodopowidon|chlorheksydyna|lateks|plaster|pyłki|roztocza kurzu|sierść|orzechy|owoce morza|jad owadów';
+const REACT='pokrzywka|wysypka|świąd|obrzęk naczynioruchowy|duszność, skurcz oskrzeli|wstrząs anafilaktyczny|biegunka|ból brzucha|nie pamięta';
+const MEDQ=[['f','Jak często','1× dziennie|2× dziennie|3× dziennie|rano|wieczorem|doraźnie|co tydzień',1],['s','Stosuje od','<1 roku|1–5 lat|>5 lat',1],['w','Kto przepisał','lekarz rodzinny|kardiolog|inny specjalista|szpital|sam (bez recepty)',1]];
+const PQ={sex:['Płeć','kobieta|mężczyzna',1],mar:['Stan cywilny','',1],place:['Miejsce zamieszkania','miasto|wieś',1],
+ job:['Zawód','pracownik biurowy|pracownik fizyczny|nauczyciel|kierowca|rolnik|ochrona zdrowia|student|uczeń|emeryt|rencista|bezrobotny',1],
+ goal:['Cel wizyty','nowe dolegliwości|kontrola choroby przewlekłej|recepta na leki przewlekłe|zaświadczenie|skierowanie|wyniki badań'],
+ where:['Miejsce wywiadu','przychodnia|SOR (szpitalny oddział ratunkowy)|izba przyjęć|oddział szpitalny',1]};
+
+const KEY='wywiad-labnuk-v3';
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+const today=()=>new Date().toISOString().slice(0,10);
+const blank=()=>({id:uid(),cr:Date.now(),up:Date.now(),p:{date:today()},a:{},cc:[{}],hyp:'',meds:[],all:[],noAll:false});
+const sample=()=>{const d=blank();d.sample=1;Object.assign(d.p,{name:'J.K.',sex:['mężczyzna'],age:'58',place:['miasto'],mar:['żonaty'],job:['kierowca'],goal:['nowe dolegliwości'],where:['przychodnia']});
+ ['i1','i2','i3','i4','cc1'].forEach(k=>d.a[k]={v:'+'});
+ d.cc=[{typ:['ból w klatce piersiowej'],S:['za mostkiem'],O:['1–4 tyg.'],O2:['stopniowo'],C:['uciskający'],R:['lewe ramię','żuchwa'],A:['duszność','poty'],T:['napadowy'],T2:['<5 min'],E:['wysiłek','zimno'],E2:['odpoczynek'],V:['6'],n:'po 2 piętrach albo szybkim marszu'}];
+ d.hyp='dławica piersiowa stabilna?';
+ ['kp1','kp2','kp3','kp4','kp5','kp6','kp7','kp9','kp11','kp12','kp13'].forEach(k=>d.a[k]={v:'-'});d.a.kp10={v:'+',n:'nieleczona'};d.a.g4={v:'-'};
+ d.a.h1={v:'-'};d.a.h2={f:{q0:['stopniowy']}};d.a.h4={v:'-'};
+ d.a.p2={f:{q0:['zawał']},n:'ojciec zmarł na zawał'};d.a.p3={f:{q0:['rozpoznanie','badania']}};d.a.p4={f:{q0:['praca']},n:'kierowca autobusu, boi się o prawo jazdy'};
+ d.a.c1={v:'+',o:1,f:{q0:['uciskający'],q1:['lewe ramię','żuchwa'],q2:['<5 min'],q3:['wysiłek','zimno'],q4:['nie stosował'],q5:['duszność','poty'],q6:['II']}};
+ d.a.c2={v:'-'};d.a.c3={v:'+',f:{q0:['przy wysiłku'],q1:['2 piętra'],q2:['II']}};d.a.c5={v:'-'};d.a.c6={v:'-'};d.a.c11={v:'-'};d.a.c12={v:'-'};
+ d.a.c13={v:'+',f:{q0:['180–199'],q1:['5–10 lat'],q2:['tak']}};
+ d.meds=[{n:'amlodypina',d:'5 mg',f:['1× dziennie'],s:['>5 lat'],w:['lekarz rodzinny']}];d.a.l1={v:'-'};
+ d.all=[{n:'penicyliny',r:['pokrzywka']}];
+ d.a.x1={v:'+',f:{q0:['pali'],q1:['20'],q2:['30']}};d.a.x2={v:'+',f:{q0:['piwo'],q1:['co tydzień'],q2:['1–2 porcje']}};d.a.x3={v:'-'};
+ d.a.w1={v:'+',f:{q0:['zawał'],q1:['ojciec'],q2:['50–65 r.ż.']}};
+ d.calc={marburg:{c:true,e:true},bmi:{w:'92',h:'178'}};d.a.w5={v:'-'};d.a.w9={f:{q0:['żyje'],q1:['zawał']}};
+ return d};
+
+let DB;
+const load=()=>{try{const r=JSON.parse(localStorage.getItem(KEY));if(r&&r.list&&r.list.length)return r}catch(e){}const s=sample();return{list:[s],cur:s.id}};
+const persist=()=>{try{localStorage.setItem(KEY,JSON.stringify(DB))}catch(e){}};
+const save=()=>{cur().up=Date.now();persist()};
+const cur=()=>DB.list.find(x=>x.id===DB.cur)||DB.list[0];
+const ans=id=>cur().a[id]||{};
+const setA=(id,o)=>{const a=cur().a;a[id]=Object.assign(a[id]||{},o)};
+
+const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const lc=s=>s&&!/^[A-ZŁŚŻŹĆŃÓĘĄ]{2}/.test(s)?s[0].toLowerCase()+s.slice(1):s;
+const one=v=>Array.isArray(v)?v[0]:v;
+const SEX=()=>{const s=one(cur().p.sex);return s==='kobieta'?'K':s==='mężczyzna'?'M':''};
+const age=()=>{const p=cur().p;if(p.dob){const b=new Date(p.dob),n=new Date(p.date||Date.now());let a=n.getFullYear()-b.getFullYear();if(n<new Date(n.getFullYear(),b.getMonth(),b.getDate()))a--;return isNaN(a)?null:a}const v=parseInt(p.age);return isNaN(v)?null:v};
+const visible=s=>!s.sex||!SEX()||SEX()===s.sex;
+const iv=i=>!i.sex||!SEX()||SEX()===i.sex;
+const must55=i=>i.m55&&age()>=55&&SEX()===i.m55;
+const fv=i=>(ans(i.id).f)||{};
+const filled=i=>{const a=ans(i.id);if(i.k==='qo')return Object.values(a.f||{}).some(v=>Array.isArray(v)?v.length:v)||!!(a.n&&a.n.trim());return !!a.v};
+const secItems=s=>s.items.filter(i=>i.id&&!i.opt&&iv(i));
+const secCount=s=>{let it=secItems(s),d=it.filter(filled).length,t=it.length,c=cur();
+ if(s.sp==='cc'){t++;if(c.cc.some(x=>(x.typ||[]).length))d++}
+ if(s.sp==='meds'){t+=2;if(c.meds.some(m=>m.n)||ans('nomeds').v)d++;if(c.all.some(m=>m.n)||c.noAll)d++}
+ if(s.sp==='intro'){t++;if(SEX()&&age()!=null)d++}
+ return[d,t]};
+let SECI='intro',BULK=null;
+
+/* chip storage: i|id|n (item), cc|x|k (complaint), p|k (patient), m|x|k (medicine), a|x (allergy reaction) */
+const getArr=key=>{const r=key.split('|'),d=cur();let v;
+ if(r[0]==='i')v=fv(ITEMS[r[1]])['q'+r[2]];else if(r[0]==='cc')v=d.cc[r[1]][r[2]];else if(r[0]==='p')v=d.p[r[1]];else if(r[0]==='m')v=d.meds[r[1]][r[2]];else if(r[0]==='a')v=d.all[r[1]].r;
+ return Array.isArray(v)?v:v?[v]:[]};
+const setArr=(key,arr)=>{const r=key.split('|'),d=cur();
+ if(r[0]==='i'){const a=ans(r[1]);setA(r[1],{f:Object.assign(a.f||{},{['q'+r[2]]:arr})})}else if(r[0]==='cc')d.cc[r[1]][r[2]]=arr;else if(r[0]==='p')d.p[r[1]]=arr;else if(r[0]==='m')d.meds[r[1]][r[2]]=arr;else if(r[0]==='a')d.all[r[1]].r=arr};
+const chipsHTML=(key,o,s,sel,g)=>`<div class="cs ${g||''}" role="group">${o.map(x=>`<button class="chip" data-chip="${esc(key)}" data-o="${esc(x)}"${s?' data-s="1"':''} aria-pressed="${sel.includes(x)}">${esc(x)}</button>`).join('')}</div>`;
+const grpHTML=(key,label,o,s,g,letter)=>`<div class="cg"><span class="cl">${letter?`<i>${letter}</i>`:''}${esc(label)}</span>${chipsHTML(key,o,s,getArr(key),g)}</div>`;
+
+const pyTxt=()=>{const f=fv(ITEMS.x1);const n=parseFloat((f.q1||[])[0]),y=parseFloat((f.q2||[])[0]);if(!(n&&y))return'';const v=n/20*y;return `≈ ${v%1?v.toFixed(1).replace('.',','):v} paczkolat (sztuki/20 × lata; przelicznik spoza skryptu)`};
+const badges=i=>(must55(i)?`<span class="badge must">obowiązkowo ≥55 r.ż.</span>`:'')+(i.opt?`<span class="badge">specjalistyczny</span>`:'');
+const noteHTML=(id,n,lbl)=>n||ans(id).nOpen?`<textarea id="n-${id}" data-note="${id}" placeholder="Uwagi…" aria-label="Uwagi: ${esc(lbl)}">${esc(n)}</textarea>`:`<button class="notebtn" data-addnote="${id}">Dopisz uwagę</button>`;
+const groupsHTML=i=>(i.q||[]).map((g,n)=>grpHTML(`i|${i.id}|${n}`,g.l,g.o,g.s,g.g)).join('');
+const fldHTML=i=>(i.f||[]).map(f=>`<label class="f" style="max-width:260px">${esc(f.l)}<input type="date" data-fld="${i.id}|${f.k}" id="f-${i.id}-${f.k}" value="${esc(fv(i)[f.k]||'')}"></label>`).join('');
+const itemHTML=i=>{
+ if(i.g)return `<h3${i.g==='Czerwone flagi'?' style="color:var(--red)"':''}>${esc(i.g)}</h3>`;
+ if(!iv(i))return '';
+ const a=ans(i.id);
+ if(i.k==='chk')return `<label class="chk" data-row="${i.id}"><input type="checkbox" id="c-${i.id}" data-chk="${i.id}" ${a.v?'checked':''}><span><span class="lb ${i.b?'b':''}">${esc(i.t)}</span>${i.h?`<span class="hint">${esc(i.h)}</span>`:''}</span></label>`;
+ if(i.k==='qo')return `<div class="row" data-row="${i.id}" style="grid-template-columns:minmax(0,1fr)"><div><span class="lb ${i.b?'b':''}">${esc(i.t)}${badges(i)}</span>${i.h?`<span class="hint">${esc(i.h)}</span>`:''}</div><div class="det">${groupsHTML(i)}${fldHTML(i)}${noteHTML(i.id,a.n,i.t)}</div></div>`;
+ const open=a.o||a.v==='+'||a.n;
+ return `<div class="row ${a.v==='+'?'vp':a.v==='-'?'vm':''} ${i.rf?'rf':''}" data-row="${i.id}">
+  <button class="lbbtn" data-tog="${i.id}" aria-expanded="${!!open}"><span class="lb ${i.b?'b':''}">${esc(i.t)}${badges(i)}</span>${i.h?`<span class="hint">${esc(i.h)}</span>`:''}</button>
+  <div class="yn"><button class="p" data-yn="${i.id}" data-val="+" aria-pressed="${a.v==='+'}" aria-label="Potwierdza">+</button><button class="m" data-yn="${i.id}" data-val="-" aria-pressed="${a.v==='-'}" aria-label="Neguje">−</button></div>
+  <div class="det" ${open?'':'hidden'}>${groupsHTML(i)}${i.py?`<div class="py" id="py">${pyTxt()}</div>`:''}${noteHTML(i.id,a.n,i.t)}</div></div>`};
+
+const MAR={M:'kawaler|żonaty|w związku|rozwiedziony|wdowiec',K:'panna|zamężna|w związku|rozwiedziona|wdowa','':'kawaler / panna|żonaty / zamężna|w związku|rozwiedziony / rozwiedziona|wdowiec / wdowa'};
+const pNote=k=>{const v=cur().p[k+'_n']||'';return v||cur().p[k+'_o']?`<input type="text" data-pn="${k}" id="pn-${k}" value="${esc(v)}" placeholder="Uwagi…" aria-label="Uwagi: ${esc(PQ[k][0])}" style="margin-top:6px">`:`<button class="notebtn" data-pnadd="${k}">Dopisz uwagę</button>`};
+const pGrp=(k,note)=>{const o=(k==='mar'?MAR[SEX()]:PQ[k][1]).split('|');if(!note)return grpHTML('p|'+k,PQ[k][0],o,PQ[k][2]);
+ return `<div class="cg"><span class="cl">${esc(PQ[k][0])}</span><div>${chipsHTML('p|'+k,o,PQ[k][2],getArr('p|'+k))}${pNote(k)}</div></div>`};
+const introHTML=()=>{const p=cur().p;return `<h2>Dane pacjenta</h2>
+ ${pGrp('sex')}
+ <div class="flds" style="margin:10px 0"><label class="f">Wiek (lata)<input type="number" inputmode="numeric" data-p="age" id="p-age" value="${esc(p.age)}"></label><label class="f">lub data urodzenia<input type="date" data-p="dob" id="p-dob" value="${esc(p.dob)}"></label><label class="f">Inicjały<input type="text" data-p="name" id="p-name" value="${esc(p.name)}" autocapitalize="characters"></label><label class="f">Data wywiadu<input type="date" data-p="date" id="p-date" value="${esc(p.date)}"></label></div>
+ <div class="det" style="padding:0">${pGrp('mar',1)}${pGrp('place',1)}${pGrp('job',1)}</div>
+ <h2>Powód zgłoszenia</h2><div class="det" style="padding:0">${pGrp('goal',1)}${pGrp('where',1)}</div>
+ <h2>Przebieg wstępu</h2>`};
+const ccHTML=()=>cur().cc.map((c,x)=>`<div class="card"><div class="hd"><b>Dolegliwość ${x+1}</b>${cur().cc.length>1?`<button class="btn ghost" data-act="delcc" data-x="${x}">Usuń</button>`:''}</div>
+ ${grpHTML(`cc|${x}|typ`,'Główny problem',PLAB,1)}
+ ${(c.typ||[])[0]==='inne'?`<label class="f">Jaka dolegliwość<input type="text" data-ccn="${x}|other" id="cc-${x}-other" value="${esc(c.other)}"></label>`:''}
+ ${(c.typ||[]).length?ccGroups(c).map(g=>grpHTML(`cc|${x}|${g.k}`,g.l,g.o,g.s,g.g,g.L)).join(''):'<p class="note" style="margin:0">Wybierz główny problem: pojawią się pytania SOCRATES, a dalej wywiad ukierunkowany pod tę kategorię. Każdy objaw opisz osobno, np. biegunkę i wymioty jako dwie dolegliwości.</p>'}
+ ${pathOf(c)&&pathOf(c).items.length?`<div><button class="btn pri gonext" data-go="${pathOf(c).sec.id}">Wywiad ukierunkowany: ${esc(pathOf(c).title)} →</button></div>`:''}
+ ${c.n||c.nOpen?`<textarea data-ccn="${x}|n" id="cc-${x}-n" placeholder="Uwagi…">${esc(c.n)}</textarea>`:`<button class="notebtn" data-ccnote="${x}">Dopisz uwagę</button>`}</div>`).join('')
+ +`<div class="btns"><button class="btn" data-act="addcc">Dodaj kolejną dolegliwość</button></div>
+ <h2>Hipotezy robocze</h2><p class="lead" style="margin-top:0">Jeśli podejrzewasz konkretny układ, zadaj wszystkie pytania z jego sekcji.</p><textarea data-hyp id="hyp" placeholder="np. dławica piersiowa? refluks?">${esc(cur().hyp)}</textarea><h2>Po zebraniu</h2>`;
+const medsHTML=()=>{const d=cur(),names=d.all.map(x=>x.n);
+ return `<h2>Leki przyjmowane</h2><p class="lead" style="margin-top:0">Nazwę wpisz: podpowiedzi obejmują substancje czynne i ok. 290 nazw handlowych sprawdzonych w Rejestrze Produktów Leczniczych (stan na 22.11.2026). Resztę zaznacz.</p>
+ ${d.meds.map((m,x)=>`<div class="ent"><div class="top2"><label class="f">Lek<input type="text" list="dl-drugs" data-med="${x}|n" id="m-${x}-n" value="${esc(m.n)}" autocomplete="off"></label><label class="f">Dawka<input type="text" data-med="${x}|d" id="m-${x}-d" value="${esc(m.d)}" placeholder="np. 5 mg"></label><button class="btn ghost" data-act="delmed" data-x="${x}">Usuń</button></div>
+ ${MEDQ.map(q=>grpHTML(`m|${x}|${q[0]}`,q[1],q[2].split('|'),q[3])).join('')}</div>`).join('')}
+ <div class="btns"><button class="btn" data-act="addmed">Dodaj lek</button><label class="chk" style="border:0;padding:0"><input type="checkbox" data-chk="nomeds" id="c-nomeds" ${ans('nomeds').v?'checked':''}><span>Nie przyjmuje leków na stałe</span></label></div>
+ <h2>Uczulenia</h2><p class="lead" style="margin-top:0">Stuknij czynnik, potem zaznacz objawy. Uczulenie na leki ląduje na górze podsumowania, tak jak na pierwszej stronie historii choroby.</p>
+ <div class="cs">${ALLERG.split('|').map(x=>`<button class="chip" data-alg="${esc(x)}" aria-pressed="${names.includes(x)}">${esc(x)}</button>`).join('')}<button class="chip add" data-act="addal">inne…</button></div>
+ ${d.all.map((m,x)=>`<div class="ent"><div class="top2" style="grid-template-columns:minmax(0,1fr) auto"><label class="f">Na co<input type="text" data-al="${x}" id="al-${x}" value="${esc(m.n)}"></label><button class="btn ghost" data-act="delal" data-x="${x}">Usuń</button></div>${grpHTML(`a|${x}`,'Objawy reakcji',REACT.split('|'))}</div>`).join('')}
+ <div class="btns"><label class="chk" style="border:0;padding:0"><input type="checkbox" id="c-noall" data-noall ${d.noAll?'checked':''}><span>Nie zna uczuleń</span></label></div><h2>Pozostałe pytania</h2>`};
+
+const bulkHTML=s=>{const ids=secItems(s).filter(i=>i.k==='yn'&&!ans(i.id).v).map(i=>i.id);const any=secItems(s).some(i=>i.k==='yn'&&ans(i.id).v);
+ const undo=BULK&&BULK.sec===s.id?`<button class="btn ghost" data-act="undo">Cofnij</button>`:'';
+ if(!ids.length&&!undo)return'';
+ return `<div class="btns" style="margin:0">${ids.length?`<button class="btn neg" data-act="bulk" data-s="${s.id}">${s.fam?'Brak w rodzinie':any?'Pozostałe: neguje':s.sys?'Bez dolegliwości z tego układu':'Neguje wszystkie'} (${ids.length})</button>`:''}${undo}</div>`};
+const SB=id=>SEC.find(s=>s.id===id)||PSEC.find(s=>s.id===id);
+const flow=()=>{const ch=chosen(),f=[SB('intro'),SB('cc'),...ch.map(p=>p.sec),SB('course'),SB('ice'),SB('meds'),SB('physio'),SB('subst'),SB('past'),SB('env'),SB('fam')];
+ if(SEX()==='K')f.push(SB('fem'));f.push(SB('close'));
+ const rel=[...new Set(ch.flatMap(p=>p.sys))];
+ const sys=SEC.filter(s=>s.sys&&visible(s)&&!f.includes(s));
+ const r=sys.filter(s=>rel.includes(s.id)),o=sys.filter(s=>!rel.includes(s.id));
+ return{main:f,rel:r,other:o,all:f.concat(r,o)}};
+const secHTML=s=>{const F=flow(),vi=F.all.indexOf(s),prev=F.all[vi-1],next=F.all[vi+1],isClose=s.id==='close';
+ const lead=s.pw?'Pytania pod wybrany problem, czerwone flagi na górze. Pytania z układów, które się tu pojawiają, zapisują się też w swoich sekcjach. Ta część wykracza poza skrypt Lab-NUK: to standardowe pytania różnicujące, sprawdź je z prowadzącym.':s.must?'Zadaj każdej pacjentce, niezależnie od zgłaszanych dolegliwości.':s.sys?(F.rel.includes(s)?'Układ powiązany z wybranym problemem: dopytaj szczegółowo.':'Dodatkowo: zapytaj krótko, rozwiń przy dodatnich odpowiedziach.'):'';
+ const u55=s.id==='uro'&&age()>=55?`Pacjent ma ≥55 lat: ${SEX()==='K'?'zapytaj o nietrzymanie moczu':SEX()==='M'?'zapytaj o trudności z oddawaniem moczu':'zapytaj kobiety o nietrzymanie, mężczyzn o trudności z oddawaniem moczu'} niezależnie od dolegliwości.`:'';
+ return `<div class="sechead"><h1>${esc(s.t)}<span class="en">${esc(s.en)}</span></h1>${bulkHTML(s)}</div>
+ ${lead?`<p class="lead">${lead}</p>`:''}${u55?`<p class="lead">${u55}</p>`:''}
+ ${s.sp==='intro'?introHTML():s.sp==='cc'?ccHTML():s.sp==='meds'?medsHTML():''}
+ <div class="rows">${s.items.map(itemHTML).join('')}</div>
+ ${calcsBlock(s.pw?PCALC[s.pw.id]:SCALC[s.id])}
+ <div class="pager">${prev?`<button class="btn ghost" data-go="${prev.id}">← ${esc(prev.t)}</button>`:'<span></span>'}${isClose||!next?`<span class="btns" style="margin:0">${next?`<button class="btn ghost" data-go="${next.id}">Dodatkowo: ${esc(next.t)}</button>`:''}<button class="btn pri" data-view="podsumowanie">Podsumowanie →</button></span>`:`<button class="btn pri" data-go="${next.id}">${esc(next.t)} →</button>`}</div>`};
+
+const navBtn=(s,chip,sub)=>{const[d,t]=secCount(s);return `<button data-go="${s.id}" class="${sub&&!chip?'sub':''}" aria-current="${s.id===SECI}"><span>${esc(s.t)}</span><span class="n ${d===t?'full':''}">${d}/${t}</span></button>`};
+const navHTML=chip=>{const F=flow(),gap=t=>chip?'':`<div class="gap">${t}</div>`;
+ return F.main.map(s=>navBtn(s,chip,!!s.pw)).join('')+(F.rel.length?gap('Dodatkowo: układy powiązane')+F.rel.map(s=>navBtn(s,chip,1)).join(''):'')+(F.other.length?gap(F.rel.length?'Pozostałe układy':'Dodatkowo: układy')+F.other.map(s=>navBtn(s,chip,1)).join(''):'')};
+
+const $=id=>document.getElementById(id);
+const setTop=()=>document.documentElement.style.setProperty('--toph',$('top').offsetHeight+'px');
+let PDOWN=0,NAVP=0;
+document.addEventListener('pointerdown',()=>{PDOWN=1},true);
+document.addEventListener('pointerup',()=>{PDOWN=0;if(NAVP)setTimeout(()=>{NAVP=0;renderNav()},60)},true);
+const renderNav=()=>{if(PDOWN){NAVP=1;return}$('secnav').innerHTML=navHTML(0);$('chips').innerHTML=navHTML(1);
+ let D=0,T=0;flow().main.forEach(s=>{const[d,t]=secCount(s);D+=d;T+=t});$('progbar').style.width=(T?D/T*100:0)+'%'};
+const renderTop=()=>{const p=cur().p,a=age();$('pt').textContent=[p.name||'bez danych',SEX(),a!=null?a+' l.':'',cur().sample?'przykładowy wywiad, dane fikcyjne':''].filter(Boolean).join(' · ');
+ const al=cur().all.filter(x=>x.n);$('allergy').hidden=!al.length;$('allergy').textContent=al.length?'Uczulenie: '+al.map(x=>x.n+((x.r||[]).length?` (${x.r.join(', ')})`:'')).join('; '):'';setTop()};
+const renderSec=()=>{const s=flow().all.find(x=>x.id===SECI)||SEC[0];SECI=s.id;$('sec').innerHTML=secHTML(s)};
+const renderAll=()=>{renderTop();renderNav();renderSec()};
+const go=id=>{SECI=id;BULK=null;renderNav();renderSec();window.scrollTo({top:0});const c=$('chips').querySelector('[aria-current=true]');if(c)c.scrollIntoView({inline:'center',block:'nearest'})};
+const rerow=id=>{const r=document.querySelector(`[data-row="${id}"]`);if(r)r.outerHTML=itemHTML(ITEMS[id])};
+const rehead=()=>{const s=SB(SECI),h=document.querySelector('.sechead');if(s&&h){const b=h.querySelector('.btns');const n=bulkHTML(s);if(b)b.outerHTML=n||'';else if(n)h.insertAdjacentHTML('beforeend',n)}};
+
+/* summary */
+const UL=t=>'\u0001'+t+'\u0002';
+const gtxt=(g,v)=>v.length?(g.l?`${UL(lc(g.l.replace(/ \(.*\)$/,'')))}: `:'')+v.join(', '):'';
+const detail=i=>{const f=fv(i),a=ans(i.id),parts=(i.q||[]).map((g,n)=>gtxt(g,f['q'+n]||[])).filter(Boolean);
+ (i.f||[]).forEach(x=>{if(f[x.k])parts.push(`${UL(lc(x.l))}: ${f[x.k].split('-').reverse().join('.')}`)});
+ if(i.py&&pyTxt())parts.push(pyTxt().replace(/ \(.*$/,''));if(a.n)parts.push(a.n);return parts.join('; ')};
+const fmtPos=i=>{const d=detail(i);return lc(i.t)+(d?` (${d})`:'')};
+const block=(items,label,fam)=>{const it=items.filter(i=>i.id&&iv(i));
+ const pos=it.filter(i=>i.k==='yn'&&ans(i.id).v==='+'),neg=it.filter(i=>i.k==='yn'&&ans(i.id).v==='-'),qo=it.filter(i=>i.k==='qo'&&filled(i));
+ const oth=it.filter(i=>i.k==='yn'&&!ans(i.id).v&&detail(i));
+ if(!pos.length&&!neg.length&&!qo.length&&!oth.length)return[];
+ const n=[{t:'h',s:label}];
+ if(oth.length)n.push({t:'pos',label:'Uwagi (bez zaznaczenia +/−)',items:oth.map(i=>({name:lc(i.t),det:detail(i)}))});
+ if(qo.length)n.push({t:'qo',items:qo.map(i=>({name:lc(i.t),det:detail(i)}))});
+ if(pos.length)n.push({t:'pos',label:fam?'W rodzinie':'Podaje',items:pos.map(i=>({name:lc(i.t),det:detail(i)}))});
+ if(neg.length)n.push({t:'neg',label:fam?'Neguje w rodzinie':'Neguje',items:neg.map(i=>{const d=detail(i);return lc(i.t)+(d?` (${d})`:'')})});
+ return n};
+const summary=()=>{const d=cur(),p=d.p,a=age(),N=[],j=v=>(v||[]).join(', ');
+ const dt=p.date?p.date.split('-').reverse().join('.'):'';
+ const cn=k=>{const c=j(p[k]),n=(p[k+'_n']||'').trim();return c&&n?`${c} (${n})`:c||n};
+ N.push({t:'title',s:`WYWIAD LEKARSKI${dt?' z dnia '+dt:''}${cn('where')?' ('+cn('where')+')':''}`});
+ const al=d.all.filter(x=>x.n);if(al.length)N.push({t:'flag',label:'UCZULENIE',s:al.map(x=>x.n+((x.r||[]).length?` (${j(x.r)})`:'')).join('; ')});else if(d.noAll)N.push({t:'p',s:'Uczuleń nie zgłasza.'});
+ const ch=chosen(),rfp=ch.flatMap(p=>p.sec.items).filter((i,n,a)=>i.rf&&iv(i)&&a.indexOf(i)===n&&ans(i.id).v==='+');
+ if(rfp.length)N.push({t:'flag',label:'CZERWONE FLAGI',s:rfp.map(fmtPos).join('; ')});
+ N.push({t:'p',s:[`${SEX()==='K'?'Pacjentka':SEX()==='M'?'Pacjent':'Pacjent(ka)'}${p.name?' '+p.name:''}`,a!=null?`lat ${a}`:'',(p.place||[]).length?`mieszka ${one(p.place)==='wieś'?'na wsi':'w mieście'}${p.place_n?` (${p.place_n.trim()})`:''}`:p.place_n?`miejsce zamieszkania: ${p.place_n.trim()}`:'',cn('mar'),cn('job')?`zawód: ${cn('job')}`:''].filter(Boolean).join(', ')+'.'});
+ if(cn('goal'))N.push({t:'kv',label:'Cel wizyty',s:cn('goal')+'.'});
+ const cc=d.cc.filter(c=>(c.typ||[]).length);
+ if(cc.length){N.push({t:'h',s:'Główne dolegliwości'});N.push({t:'ol',items:cc.map(c=>{const ty=c.typ[0]==='inne'?(c.other||'inna dolegliwość'):c.typ[0];
+  const parts=ccGroups(c).map(g=>{const v=c[g.k]||[];if(!v.length)return'';if(g.k==='V'&&g.g==='nrs')return `${UL('nasilenie')}: ${v[0]}/10 w NRS (Numeric Rating Scale)`;return gtxt(g,v)}).filter(Boolean);if(c.n)parts.push(c.n);
+  return {name:ty[0].toUpperCase()+ty.slice(1),det:parts.join('; ')}})})}
+ if(d.hyp)N.push({t:'kv',label:'Hipotezy robocze',s:d.hyp});
+ const done=new Set();
+ ch.forEach(p=>{const its=p.sec.items.filter(i=>i.id&&String(i.sec).startsWith('pw-')&&!done.has(i.id));its.forEach(i=>done.add(i.id));N.push(...block(its,'Wywiad ukierunkowany: '+p.title))});
+ const rest=Object.values(ITEMS).filter(i=>String(i.sec).startsWith('pw-')&&!done.has(i.id)&&(ans(i.id).v||detail(i)||filled(i)));
+ if(rest.length)N.push(...block(rest,'Inne pytania ukierunkowane (z wcześniej wybranego problemu)'));
+ N.push(...block(SB('course').items,'Początek i przebieg'),...block(SB('ice').items,'Perspektywa pacjenta'));
+ SEC.filter(s=>s.sys&&visible(s)).forEach(s=>N.push(...block(s.items,s.t)));
+ const md=d.meds.filter(m=>m.n);
+ if(md.length){N.push({t:'h',s:'Leki'});N.push({t:'ol',items:md.map(m=>({name:`${m.n}${m.d?' '+m.d:''}${(m.f||[]).length?' '+j(m.f):''}`,det:[(m.s||[]).length?UL('stosuje od')+' '+j(m.s):'',(m.w||[]).length?UL('zlecił')+': '+j(m.w):''].filter(Boolean).join(', ')}))})}
+ else if(ans('nomeds').v){N.push({t:'h',s:'Leki'});N.push({t:'p',s:'Leków na stałe nie przyjmuje.'})}
+ N.push(...block(SB('meds').items,'Inne leki'));
+ const ph=SB('physio').items,gi=ph.findIndex(i=>i.g);N.push(...block(ph.slice(0,gi),'Czynności fizjologiczne'),...block(ph.slice(gi+1),'Aspekty psychologiczne'));
+ [['subst','Używki'],['past','Choroby przebyte'],['env','Wywiad środowiskowy'],['fam','Wywiad rodzinny']].forEach(([id,l])=>N.push(...block(SB(id).items,l,id==='fam')));
+ N.push(...calcNodes());
+ return N};
+const it2=x=>x.det?`${x.name} (${x.det})`:x.name;
+const sumHTML=N=>N.map(n=>{const e=t=>esc(t).replace(/\u0001(.*?)\u0002/g,'<u>$1</u>');
+ if(n.t==='title')return `<p class="st"><b>${e(n.s)}</b></p>`;
+ if(n.t==='flag')return `<p class="fl"><b>${e(n.label)}:</b> ${e(n.s)}</p>`;
+ if(n.t==='p')return `<p>${e(n.s)}</p>`;
+ if(n.t==='kv')return `<p><b>${e(n.label)}:</b> ${e(n.s)}</p>`;
+ if(n.t==='h')return `<h3>${e(n.s)}</h3>`;
+ if(n.t==='ol')return `<ol>${n.items.map(x=>`<li><b>${e(x.name)}</b>${x.det?' – '+e(x.det):''}</li>`).join('')}</ol>`;
+ if(n.t==='qo')return n.items.map(x=>`<p><u>${e(x.name[0].toUpperCase()+x.name.slice(1))}</u>: ${e(x.det)}</p>`).join('');
+ if(n.t==='pos')return n.items.length===1?`<p class="pos"><b>${e(n.label)}:</b> ${e(it2(n.items[0]))}</p>`:`<p class="pos"><b>${e(n.label)}:</b></p><ul>${n.items.map(x=>`<li>${e(it2(x))}</li>`).join('')}</ul>`;
+ if(n.t==='neg')return n.items.length<=3?`<p class="neg"><b>${e(n.label)}:</b> ${e(n.items.join('; '))}.</p>`:`<div class="neg"><p><b>${e(n.label)}:</b></p><ul>${n.items.map(x=>`<li>${e(x)}</li>`).join('')}</ul></div>`;
+ return''}).join('');
+const sumText=N=>{const L=[];N.forEach(n=>{
+ if(n.t==='title')L.push(n.s);
+ else if(n.t==='flag')L.push(`${n.label}: ${n.s}`);
+ else if(n.t==='p')L.push(n.s);
+ else if(n.t==='kv')L.push(`${n.label}: ${n.s}`);
+ else if(n.t==='h')L.push('',n.s.toUpperCase());
+ else if(n.t==='ol')n.items.forEach((x,i)=>L.push(`${i+1}. ${x.name}${x.det?' – '+x.det:''}`));
+ else if(n.t==='qo')n.items.forEach(x=>L.push(`${x.name[0].toUpperCase()+x.name.slice(1)}: ${x.det}`));
+ else if(n.t==='pos'){if(n.items.length===1)L.push(`${n.label}: ${it2(n.items[0])}`);else{L.push(n.label+':');n.items.forEach(x=>L.push('  • '+it2(x)))}}
+ else if(n.t==='neg'){if(n.items.length<=3)L.push(`${n.label.toUpperCase()}: ${n.items.join('; ')}.`);else{L.push(n.label.toUpperCase()+':');n.items.forEach(x=>L.push('  – '+x))}}});
+ return L.join('\n').replace(/[\u0001\u0002]/g,'')};
+const missing=()=>{const m=[],c=cur();SEC.filter(s=>(s.req||s.must)&&visible(s)&&(!s.must||SEX()==='K')).forEach(s=>{const x=s.items.filter(i=>i.id&&i.b&&iv(i)&&!filled(i)).map(i=>i.t);
+  if(s.sp==='intro'&&(!SEX()||age()==null))x.unshift('płeć i wiek');
+  if(s.sp==='cc'&&!c.cc.some(q=>(q.typ||[]).length))x.unshift('opis głównej dolegliwości');
+  if(s.sp==='meds'){if(!c.meds.some(q=>q.n)&&!ans('nomeds').v)x.unshift('lista leków');if(!c.all.some(q=>q.n)&&!c.noAll)x.unshift('uczulenia')}
+  if(x.length)m.push([s.t,x])});
+ SEC.forEach(s=>s.items.forEach(i=>{if(i.id&&must55(i)&&!filled(i))m.push([s.t,[i.t+' (≥55 r.ż.)']])}));
+ chosen().forEach(p=>{const x=p.sec.items.filter(i=>i.rf&&iv(i)&&!filled(i)).map(i=>i.t);if(x.length)m.push([`Czerwone flagi, ${p.title} (spoza skryptu)`,x])});return m};
+let SUMTXT='',EDITED=0;
+const renderSum=()=>{const N=summary();$('sum').innerHTML=sumHTML(N);SUMTXT=sumText(N);EDITED=0;const m=missing();
+ $('missing').innerHTML=m.length?`<div class="miss"><b>Brakuje w wywiadzie</b> <span class="note">pogrubione elementy skryptu i niezapytane czerwone flagi</span><ul>${m.map(x=>`<li><b>${esc(x[0])}:</b> ${x[1].map(esc).join(', ')}</li>`).join('')}</ul></div>`:'<p class="note">Wszystkie pogrubione elementy poza układami są uzupełnione.</p>'};
+const CWHERE=id=>{const w=[];Object.entries(PCALC).forEach(([p,ids])=>{if(ids.includes(id))w.push(PATHS.find(x=>x.id===p).title)});if(SCALC.subst.includes(id))w.push('używki');if(SCALC.physio.includes(id))w.push('czynności fizjologiczne');return w.join(', ')};
+const renderCalcs=()=>{$('calclist').innerHTML=Object.keys(CALCS).map(id=>`<p class="note cwhere">Przy: ${esc(CWHERE(id))}</p>${calcHTML(id)}`).join('')};
+const renderList=()=>{$('savedlist').innerHTML=DB.list.slice().sort((a,b)=>b.up-a.up).map(d=>{const c=(d.cc||[]).find(x=>(x.typ||[]).length);
+ return `<div class="saved"><div><div class="who">${esc(d.p.name||'bez danych')}${d.sample?' · przykład':''}${d.id===DB.cur?' · otwarty':''}</div><div class="when">${new Date(d.up).toLocaleString('pl-PL',{dateStyle:'medium',timeStyle:'short'})}${c?' · '+esc(c.typ[0]):''}</div></div>
+ <div class="btns" style="margin:0"><button class="btn ghost" data-act="open" data-id="${d.id}">Otwórz</button><button class="btn danger" data-act="del" data-id="${d.id}">Usuń</button></div></div>`}).join('')};
+const view=v=>{['wywiad','podsumowanie','sciaga','skale','lista'].forEach(x=>$('v-'+x).hidden=x!==v);document.querySelectorAll('#tabs button').forEach(b=>b.setAttribute('aria-current',b.dataset.v===v));
+ if(v==='podsumowanie')renderSum();if(v==='lista')renderList();if(v==='skale')renderCalcs();if(v==='wywiad')renderAll();window.scrollTo({top:0})};
+
+let tmr;const later=()=>{clearTimeout(tmr);tmr=setTimeout(()=>{save();renderNav();renderTop()},250)};
+document.addEventListener('input',e=>{const t=e.target,d=cur(),ds=t.dataset;
+ if(ds.note)setA(ds.note,{n:t.value});
+ else if(ds.fld){const[i,k]=ds.fld.split('|');const a=ans(i);setA(i,{f:Object.assign(a.f||{},{[k]:t.value})})}
+ else if(ds.p)d.p[ds.p]=t.value;
+ else if(ds.ccn){const[x,k]=ds.ccn.split('|');d.cc[x][k]=t.value}
+ else if(ds.pn)d.p[ds.pn+'_n']=t.value;
+ else if(ds.med){const[x,k]=ds.med.split('|');d.meds[x][k]=t.value}
+ else if(ds.al!=null)d.all[ds.al].n=t.value;
+ else if('hyp' in ds)d.hyp=t.value;
+ else if(ds.bmi){cst('bmi')[ds.bmi]=t.value;recalc('stopbang');const R=calcRes('bmi');document.querySelectorAll('.calc[data-calc="bmi"]').forEach(el=>{el.querySelector('.res').textContent=R.score;el.querySelector('.interp').textContent='→ '+R.txt;el.querySelectorAll('[data-bmi]').forEach(q=>{if(q!==t&&q.dataset.bmi===ds.bmi)q.value=t.value})})}
+ else return;later()});
+document.addEventListener('change',e=>{const t=e.target,ds=t.dataset;
+ if(ds.chk){setA(ds.chk,{v:t.checked?'+':''});save();renderNav()}
+ else if('noall' in ds){cur().noAll=t.checked;save();renderNav();renderTop()}
+ else if(ds.p==='age'||ds.p==='dob'){save();renderTop();renderNav()}});
+let delArm=null;
+document.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;const ds=b.dataset,d=cur();
+ if(ds.v){view(ds.v);return}
+ if(ds.view){view(ds.view);return}
+ if(ds.go){go(ds.go);return}
+ if(ds.crit){const[id,k]=ds.crit.split('|'),st=cst(id);st[k]=!st[k];save();recalc(id);return}
+ if(ds.cro){const[id,k]=ds.cro.split('|'),st=cst(id);st[k]=st[k]===ds.o?null:ds.o;save();recalc(id);return}
+ if(ds.chip){const key=ds.chip,o=ds.o;let arr=getArr(key).slice();arr=arr.includes(o)?arr.filter(x=>x!==o):ds.s?[o]:arr.concat(o);setArr(key,arr);
+  const r=key.split('|');
+  if(r[0]==='i'&&ITEMS[r[1]].k==='yn'&&arr.length&&!ans(r[1]).v){setA(r[1],{v:'+',o:1});save();rerow(r[1]);rehead();renderNav();return}
+  save();
+  if(r[0]==='cc'&&(r[2]==='typ'||r[2]==='S')){renderSec();renderNav();return}
+  if(r[0]==='p'&&r[1]==='sex'){cur().p.mar=[];save();renderAll();return}
+  document.querySelectorAll('[data-chip]').forEach(x=>{if(x.dataset.chip===key)x.setAttribute('aria-pressed',arr.includes(x.dataset.o))});
+  if(r[0]==='i'&&r[1]==='x1'&&$('py'))$('py').textContent=pyTxt();
+  if(r[0]==='a')renderTop();
+  renderNav();return}
+ if(ds.alg){const i=d.all.findIndex(x=>x.n===ds.alg);if(i>=0)d.all.splice(i,1);else d.all.push({n:ds.alg,r:[]});d.noAll=false;save();renderSec();renderNav();renderTop();return}
+ if(ds.yn){const a=ans(ds.yn),v=a.v===ds.val?'':ds.val;setA(ds.yn,{v,o:v==='+'?1:a.o});save();rerow(ds.yn);rehead();renderNav();return}
+ if(ds.tog){const a=ans(ds.tog),op=!(b.getAttribute('aria-expanded')==='true');setA(ds.tog,{o:op?1:0});const r=document.querySelector(`[data-row="${ds.tog}"]`);if(r){r.querySelector('.det').hidden=!op;b.setAttribute('aria-expanded',op)}save();return}
+ if(ds.addnote){setA(ds.addnote,{nOpen:1});const id=ds.addnote;b.outerHTML=noteHTML(id,'',ITEMS[id]?ITEMS[id].t:'');const t=$('n-'+id);if(t)t.focus();return}
+ if(ds.pnadd){const k=ds.pnadd;d.p[k+'_o']=1;b.outerHTML=pNote(k);const t=$('pn-'+k);if(t)t.focus();save();return}
+ if(ds.ccnote){d.cc[ds.ccnote].nOpen=1;renderSec();const t=$(`cc-${ds.ccnote}-n`);if(t)t.focus();return}
+ const act=ds.act;if(!act)return;
+ if(act==='bulk'){const s=SB(ds.s);const ids=secItems(s).filter(i=>i.k==='yn'&&!ans(i.id).v).map(i=>i.id);ids.forEach(id=>setA(id,{v:'-'}));BULK={sec:s.id,ids};save();renderSec();renderNav();return}
+ if(act==='undo'){if(BULK)BULK.ids.forEach(id=>setA(id,{v:''}));BULK=null;save();renderSec();renderNav();return}
+ if(act==='addcc'){d.cc.push({});save();renderSec();renderNav()}
+ if(act==='delcc'){d.cc.splice(+ds.x,1);save();renderSec();renderNav()}
+ if(act==='addmed'){d.meds.push({});save();renderSec();renderNav();const t=$(`m-${d.meds.length-1}-n`);if(t)t.focus()}
+ if(act==='delmed'){d.meds.splice(+ds.x,1);save();renderSec();renderNav()}
+ if(act==='addal'){d.all.push({n:'',r:[]});d.noAll=false;save();renderSec();renderNav();const t=$(`al-${d.all.length-1}`);if(t)t.focus()}
+ if(act==='delal'){d.all.splice(+ds.x,1);save();renderSec();renderNav();renderTop()}
+ if(act==='export'){exportAll();return}
+ if(act==='import'){$('impfile').click();return}
+ if(act==='new'){const n=blank();DB.list.push(n);DB.cur=n.id;SECI='intro';save();view('wywiad')}
+ if(act==='open'){DB.cur=ds.id;SECI='intro';persist();view('wywiad')}
+ if(act==='del'){if(delArm!==ds.id){delArm=ds.id;b.textContent='Na pewno usunąć?';return}delArm=null;DB.list=DB.list.filter(x=>x.id!==ds.id);if(!DB.list.length)DB.list.push(blank());if(!DB.list.some(x=>x.id===DB.cur))DB.cur=DB.list[0].id;persist();renderList();renderTop()}
+});
+$('regen').onclick=renderSum;
+const APPV='2026-11-22';
+const ioMsg=t=>{$('iomsg').textContent=t};
+const exportAll=async()=>{const data={app:'wywiad-labnuk',format:1,exported:new Date().toISOString(),list:DB.list};
+ const name=`wywiady-${new Date().toISOString().slice(0,10)}.json`;const blob=new Blob([JSON.stringify(data,null,1)],{type:'application/json'});
+ try{const f=new File([blob],name,{type:'application/json'});if(navigator.canShare&&navigator.canShare({files:[f]})){await navigator.share({files:[f],title:name});ioMsg('Wyeksportowano '+DB.list.length+' wywiadów.');return}}catch(e){if(e&&e.name==='AbortError'){ioMsg('Anulowano.');return}}
+ try{const u=URL.createObjectURL(blob),a=document.createElement('a');a.href=u;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),4000);ioMsg('Zapisano plik '+name+'.')}catch(e){ioMsg('Nie udało się zapisać pliku.')}};
+$('impfile').addEventListener('change',async e=>{const f=e.target.files[0];e.target.value='';if(!f)return;
+ try{const data=JSON.parse(await f.text());const list=Array.isArray(data)?data:data.list;if(!Array.isArray(list))throw 0;
+  let add=0,upd=0;list.forEach(d=>{if(!d||!d.id||!d.p)return;const i=DB.list.findIndex(x=>x.id===d.id);if(i<0){DB.list.push(d);add++}else if((d.up||0)>(DB.list[i].up||0)){DB.list[i]=d;upd++}});
+  DB.list.forEach(d=>(d.cc||[]).forEach(c=>{const t=(c.typ||[])[0];if(LEGACY[t])c.typ=[LEGACY[t]]}));
+  persist();renderList();ioMsg(`Zaimportowano: ${add} nowych, ${upd} zaktualizowanych.`)}
+ catch(err){ioMsg('To nie jest plik eksportu z tej aplikacji.')}});
+if($('ver'))$('ver').textContent='Wersja '+APPV;
+if('serviceWorker' in navigator&&(location.protocol==='https:'||location.hostname==='localhost'))navigator.serviceWorker.register('sw.js').catch(()=>{});
+try{navigator.storage&&navigator.storage.persist&&navigator.storage.persist()}catch(e){}
+$('sum').addEventListener('input',()=>{EDITED=1});
+const upNeg=t=>t.replace(/(^|\n)Neguje( w rodzinie)?:/g,(m,a,b)=>a+'NEGUJE'+(b?' W RODZINIE':'')+':');
+const copyOut=async(html,txt,el)=>{let ok=false;
+ try{if(window.ClipboardItem){await navigator.clipboard.write([new ClipboardItem({'text/html':new Blob([html],{type:'text/html'}),'text/plain':new Blob([txt],{type:'text/plain'})})]);ok=true}}catch(e){}
+ if(!ok){try{await navigator.clipboard.writeText(txt);ok=true}catch(e){}}
+ if(!ok){try{const r=document.createRange();r.selectNodeContents(el);const sel=getSelection();sel.removeAllRanges();sel.addRange(r);ok=document.execCommand('copy');sel.removeAllRanges()}catch(e){}}
+ $('copied').textContent=ok?'Skopiowano.':'Nie udało się skopiować: zaznacz tekst i skopiuj ręcznie.';setTimeout(()=>$('copied').textContent='',3000)};
+$('copy').onclick=()=>{const el=$('sum');copyOut(`<div>${el.innerHTML}</div>`,EDITED?upNeg(el.innerText):SUMTXT,el)};
+/* simple copy: one line per entry, only bold and underline kept, lists folded into the line */
+const inl=n=>{let h='';n.childNodes.forEach(c=>{if(c.nodeType===3)h+=esc(c.textContent);else if(c.nodeType===1){const t=c.tagName,x=inl(c);h+=t==='B'||t==='STRONG'?`<b>${x}</b>`:t==='U'?`<u>${x}</u>`:t==='BR'?' ':x}});return h.replace(/\s+/g,' ').trim()};
+const flat=()=>{const out=[],lis=ul=>[...ul.children].filter(x=>x.tagName==='LI').map(inl).filter(Boolean);
+ [...$('sum').children].forEach(k=>{const t=k.tagName;
+  if(t==='H3'){out.push('',`<b>${inl(k)}</b>`)}
+  else if(t==='OL')lis(k).forEach(x=>out.push(x));
+  else if(t==='UL'){const it=lis(k).join('; ')+'.',l=out.length-1;if(l>=0&&/:<\/b>$/.test(out[l]))out[l]+=' '+it;else out.push(it)}
+  else if(k.querySelector&&k.querySelector('ul')&&t==='DIV'){const p=k.querySelector('p'),ul=k.querySelector('ul');out.push((p?inl(p):'')+' '+lis(ul).join('; ')+'.')}
+  else{const h=inl(k);if(h)out.push(h)}});
+ while(out.length&&!out[0])out.shift();return out};
+$('copyflat').onclick=()=>{const L=flat(),tmp=document.createElement('div');
+ const html=L.map(x=>x||'').join('<br>');
+ const txt=upNeg(L.map(x=>{tmp.innerHTML=x;return tmp.textContent}).join('\n'));
+ const box=document.createElement('div');box.innerHTML=html;box.style.cssText='position:fixed;left:-9999px;top:0';document.body.appendChild(box);
+ copyOut(`<div>${html}</div>`,txt,box).finally(()=>box.remove())};
+window.addEventListener('resize',setTop);
+$('dl-drugs').innerHTML=DRUGS.map(x=>`<option value="${esc(x)}">`).join('');
+
+const start=data=>{DB=data&&data.list&&data.list.length?data:load();DB.list.forEach(d=>(d.cc||[]).forEach(c=>{const t=(c.typ||[])[0];if(LEGACY[t])c.typ=[LEGACY[t]]}));renderAll()};
+window.claude?.hot?.snapshot?.(()=>DB);
+window.claude?.hot?.ready?window.claude.hot.ready(start):start(window.claude?.hot?.data??{});
+}
+</script>
+</body>
+</html>
