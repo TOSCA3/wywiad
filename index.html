@@ -107,6 +107,7 @@ textarea,input[type=text],input[type=number],input[type=date],select{width:100%;
 textarea{min-height:56px;resize:vertical;line-height:1.45}
 textarea:focus,input:focus,select:focus,button:focus-visible{outline:2px solid var(--pen);outline-offset:1px}
 input.bad{border-color:var(--red);outline-color:var(--red)}
+.updbar{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:60;border:0;border-radius:12px;background:var(--pen);color:var(--penink);font-weight:600;padding:14px 18px;min-height:48px;box-shadow:0 6px 24px rgba(0,0,0,.2);cursor:pointer;max-width:calc(100% - 32px)}
 .notebtn{justify-self:start;border:0;background:none;color:var(--mute);font-size:14px;padding:8px 0;min-height:40px;cursor:pointer;text-decoration:underline;text-underline-offset:3px}
 label.f{display:grid;gap:4px;font-size:14px;color:var(--mute)}
 .flds{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px}
@@ -280,6 +281,7 @@ body.locked .top,body.locked main{visibility:hidden}
       <h2>Na ekranie początkowym iPada</h2>
       <p class="note">Otwórz tę stronę w Safari, stuknij Udostępnij, potem „Do ekranu początkowego”. Po pierwszym otwarciu aplikacja działa też bez internetu.</p>
       <p class="note" id="ver"></p>
+      <div class="btns"><button class="btn ghost" data-act="upd">Sprawdź aktualizację</button></div>
     </div>
   </section>
 </main>
@@ -1242,13 +1244,14 @@ document.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)r
  if(act==='addal'){d.all.push({n:'',r:[]});d.noAll=false;save();renderSec();renderNav();const t=$(`al-${d.all.length-1}`);if(t)t.focus()}
  if(act==='delal'){d.all.splice(+ds.x,1);save();renderSec();renderNav();renderTop()}
  if(act==='export'){exportAll();return}
+ if(act==='upd'){checkUpd();return}
  if(act==='import'){$('impfile').click();return}
  if(act==='new'){const n=blank();DB.list.push(n);DB.cur=n.id;SECI='intro';save();view('wywiad')}
  if(act==='open'){DB.cur=ds.id;SECI='intro';persist();view('wywiad')}
  if(act==='del'){if(delArm!==ds.id){delArm=ds.id;b.textContent='Na pewno usunąć?';return}delArm=null;DB.list=DB.list.filter(x=>x.id!==ds.id);if(!DB.list.length)DB.list.push(blank());if(!DB.list.some(x=>x.id===DB.cur))DB.cur=DB.list[0].id;persist();renderList();renderTop()}
 });
 $('regen').onclick=renderSum;
-const APPV='2026-11-22.5';
+const APPV='2026-11-22.6';
 const ioMsg=t=>{$('iomsg').textContent=t};
 const exportAll=async()=>{const data={app:'wywiad-labnuk',format:1,exported:new Date().toISOString(),list:DB.list};
  const name=`wywiady-${new Date().toISOString().slice(0,10)}.json`;const blob=new Blob([JSON.stringify(data,null,1)],{type:'application/json'});
@@ -1261,7 +1264,17 @@ $('impfile').addEventListener('change',async e=>{const f=e.target.files[0];e.tar
   persist();renderList();ioMsg(`Zaimportowano: ${add} nowych, ${upd} zaktualizowanych.`)}
  catch(err){ioMsg('To nie jest plik eksportu z tej aplikacji.')}});
 if($('ver'))$('ver').textContent='Wersja '+APPV;
-if('serviceWorker' in navigator&&(location.protocol==='https:'||location.hostname==='localhost'))navigator.serviceWorker.register('sw.js').catch(()=>{});
+const showUpd=()=>{if($('updbar'))return;const b=document.createElement('button');b.id='updbar';b.className='updbar';b.textContent='Dostępna nowa wersja aplikacji. Stuknij, aby odświeżyć.';b.onclick=()=>location.reload();document.body.appendChild(b)};
+let SWREG=null;
+if('serviceWorker' in navigator&&(location.protocol==='https:'||location.hostname==='localhost')){
+ const hadCtrl=!!navigator.serviceWorker.controller;
+ navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(r=>{SWREG=r;r.update().catch(()=>{})}).catch(()=>{});
+ navigator.serviceWorker.addEventListener('controllerchange',()=>{if(hadCtrl)showUpd()});
+ document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&SWREG)SWREG.update().catch(()=>{})});
+}
+const checkUpd=async()=>{ioMsg('Sprawdzam…');try{const t=await fetch('index.html',{cache:'no-store'}).then(r=>r.text());const v=(t.match(/const APPV='([^']*)'/)||[])[1];
+ if(SWREG)await SWREG.update().catch(()=>{});
+ if(v&&v!==APPV){ioMsg('Pobieram wersję '+v+'…');setTimeout(()=>location.reload(),600)}else ioMsg(v?'Masz najnowszą wersję ('+APPV+').':'Brak połączenia z internetem.')}catch(e){ioMsg('Brak połączenia z internetem.')}};
 try{navigator.storage&&navigator.storage.persist&&navigator.storage.persist()}catch(e){}
 $('sum').addEventListener('input',()=>{EDITED=1});
 const upNeg=t=>t.replace(/(^|\n)Neguje( w rodzinie)?:/g,(m,a,b)=>a+'NEGUJE'+(b?' W RODZINIE':'')+':');
