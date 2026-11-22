@@ -21,7 +21,7 @@
    COLOUR white paper, black ink, ballpoint blue #1d3fbb for chosen answers, red #c8102e for allergy/gaps
    TYPE Public Sans 800 titles + Public Sans text
    LAYOUT iPad landscape and portrait: section list left, form right; phone: sticky bar, scrolling section chips, one column */
-:root{color-scheme:light dark;--bg:light-dark(#ffffff,#0f1114);--ink:light-dark(#121417,#eceef1);--mute:light-dark(#585e68,#9ca3ad);--line:light-dark(#dfe2e7,#2c3038);--panel:light-dark(#f5f6f8,#171a1f);--pen:light-dark(#1d3fbb,#93a9ff);--penink:light-dark(#ffffff,#0f1114);--penbg:light-dark(#e9eeff,#1b2340);--red:light-dark(#c8102e,#ff7385);--redbg:light-dark(#fdebee,#3a1218)}
+:root{color-scheme:light dark;--okbg:light-dark(#e6f6ea,#15301f);--okink:light-dark(#1f6b35,#8fd6a4);--todobg:light-dark(#fdeaf0,#3a1b26);--bg:light-dark(#ffffff,#0f1114);--ink:light-dark(#121417,#eceef1);--mute:light-dark(#585e68,#9ca3ad);--line:light-dark(#dfe2e7,#2c3038);--panel:light-dark(#f5f6f8,#171a1f);--pen:light-dark(#1d3fbb,#93a9ff);--penink:light-dark(#ffffff,#0f1114);--penbg:light-dark(#e9eeff,#1b2340);--red:light-dark(#c8102e,#ff7385);--redbg:light-dark(#fdebee,#3a1218)}
 :root[data-theme=light]{color-scheme:light}
 :root[data-theme=dark]{color-scheme:dark}
 *{box-sizing:border-box;min-width:0}
@@ -47,7 +47,11 @@ button{touch-action:manipulation}
 .secnav{position:sticky;top:96px;display:flex;flex-direction:column;gap:2px;max-height:calc(100svh - 110px);overflow:auto;-webkit-overflow-scrolling:touch}
 .secnav button{flex:none;display:flex;justify-content:space-between;gap:8px;align-items:baseline;text-align:left;border:0;background:none;padding:9px 10px;border-radius:8px;cursor:pointer;font-size:15px;min-height:42px}
 .secnav button.sub{padding-left:22px}
-.secnav button[aria-current=true]{background:var(--panel);font-weight:600}
+.secnav button[aria-current=true]{font-weight:600;box-shadow:inset 3px 0 0 var(--pen)}
+.secnav button.ok,.chips button.ok{background:var(--okbg)}
+.secnav button.todo,.chips button.todo{background:var(--todobg)}
+.secnav button.ok .n{color:var(--okink)}
+.secnav{gap:3px}
 .secnav .n{font-size:13px;color:var(--mute);white-space:nowrap;font-variant-numeric:tabular-nums}
 .secnav .n.full{color:var(--pen)}
 .secnav .gap{font-size:13px;color:var(--mute);padding:12px 10px 2px}
@@ -1090,9 +1094,9 @@ const secHTML=s=>{const F=flow(),vi=F.all.indexOf(s),prev=F.all[vi-1],next=F.all
  ${calcsBlock(s.pw?PCALC[s.pw.id]:SCALC[s.id])}
  <div class="pager">${prev?`<button class="btn ghost" data-go="${prev.id}">← ${esc(prev.t)}</button>`:'<span></span>'}${isClose||!next?`<span class="btns" style="margin:0">${next?`<button class="btn ghost" data-go="${next.id}">Dodatkowo: ${esc(next.t)}</button>`:''}<button class="btn pri" data-view="podsumowanie">Podsumowanie →</button></span>`:`<button class="btn pri" data-go="${next.id}">${esc(next.t)} →</button>`}</div>`};
 
-const navBtn=(s,chip,sub)=>{const[d,t]=secCount(s);return `<button data-go="${s.id}" class="${sub&&!chip?'sub':''}" aria-current="${s.id===SECI}"><span>${esc(s.t)}</span><span class="n ${d===t?'full':''}">${d}/${t}</span></button>`};
+const navBtn=(s,chip,sub,opt)=>{const[d,t]=secCount(s);const st=d>=t?'ok':(opt&&!d)?'':'todo';return `<button data-go="${s.id}" class="${sub&&!chip?'sub':''} ${st}" aria-current="${s.id===SECI}"><span>${esc(s.t)}</span><span class="n ${d===t?'full':''}">${d}/${t}</span></button>`};
 const navHTML=chip=>{const F=flow(),gap=t=>chip?'':`<div class="gap">${t}</div>`;
- return F.main.map(s=>navBtn(s,chip,!!s.pw)).join('')+(F.rel.length?gap('Dodatkowo: układy powiązane')+F.rel.map(s=>navBtn(s,chip,1)).join(''):'')+(F.other.length?gap(F.rel.length?'Pozostałe układy':'Dodatkowo: układy')+F.other.map(s=>navBtn(s,chip,1)).join(''):'')};
+ return F.main.map(s=>navBtn(s,chip,!!s.pw)).join('')+(F.rel.length?gap('Dodatkowo: układy powiązane')+F.rel.map(s=>navBtn(s,chip,1,1)).join(''):'')+(F.other.length?gap(F.rel.length?'Pozostałe układy':'Dodatkowo: układy')+F.other.map(s=>navBtn(s,chip,1,1)).join(''):'')};
 
 const $=id=>document.getElementById(id);
 const setTop=()=>document.documentElement.style.setProperty('--toph',$('top').offsetHeight+'px');
@@ -1257,7 +1261,7 @@ document.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)r
  if(act==='del'){if(delArm!==ds.id){delArm=ds.id;b.textContent='Na pewno usunąć?';return}delArm=null;DB.list=DB.list.filter(x=>x.id!==ds.id);if(!DB.list.length)DB.list.push(blank());if(!DB.list.some(x=>x.id===DB.cur))DB.cur=DB.list[0].id;persist();renderList();renderTop()}
 });
 $('regen').onclick=renderSum;
-const APPV='2026-11-22.7',APPDATE='22.11.2026';
+const APPV='2026-11-22.8',APPDATE='22.11.2026';
 const ioMsg=t=>{$('iomsg').textContent=t};
 const exportAll=async()=>{const data={app:'wywiad-labnuk',format:1,exported:new Date().toISOString(),list:DB.list};
  const name=`wywiady-${new Date().toISOString().slice(0,10)}.json`;const blob=new Blob([JSON.stringify(data,null,1)],{type:'application/json'});
