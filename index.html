@@ -1217,7 +1217,7 @@ document.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)r
  if(act==='del'){if(delArm!==ds.id){delArm=ds.id;b.textContent='Na pewno usunąć?';return}delArm=null;DB.list=DB.list.filter(x=>x.id!==ds.id);if(!DB.list.length)DB.list.push(blank());if(!DB.list.some(x=>x.id===DB.cur))DB.cur=DB.list[0].id;persist();renderList();renderTop()}
 });
 $('regen').onclick=renderSum;
-const APPV='2026-11-22';
+const APPV='2026-11-22.2';
 const ioMsg=t=>{$('iomsg').textContent=t};
 const exportAll=async()=>{const data={app:'wywiad-labnuk',format:1,exported:new Date().toISOString(),list:DB.list};
  const name=`wywiady-${new Date().toISOString().slice(0,10)}.json`;const blob=new Blob([JSON.stringify(data,null,1)],{type:'application/json'});
@@ -1258,7 +1258,7 @@ $('copyflat').onclick=()=>{const L=flat(),tmp=document.createElement('div');
 window.addEventListener('resize',setTop);
 $('dl-drugs').innerHTML=DRUGS.map(x=>`<option value="${esc(x)}">`).join('');
 
-const start=data=>{DB=data&&data.list&&data.list.length?data:load();DB.list.forEach(d=>(d.cc||[]).forEach(c=>{const t=(c.typ||[])[0];if(LEGACY[t])c.typ=[LEGACY[t]]}));renderAll()};
+const start=data=>{DB=data&&data.list&&data.list.length?data:load();DB.list.forEach(d=>(d.cc||[]).forEach(c=>{const t=(c.typ||[])[0];if(LEGACY[t])c.typ=[LEGACY[t]]}));renderAll();view('lista')};
 window.claude?.hot?.snapshot?.(()=>DB);
 window.claude?.hot?.ready?window.claude.hot.ready(start):start(window.claude?.hot?.data??{});
 }
