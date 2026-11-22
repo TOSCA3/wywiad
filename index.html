@@ -180,6 +180,9 @@ label.f{display:grid;gap:4px;font-size:14px;color:var(--mute)}
 .gate img{width:88px;height:88px;border-radius:20px}
 .gate h1{font-size:32px}
 .gate .err{color:var(--red);font-weight:600;min-height:1.4em;margin:0}
+.gatechk{border:0;padding:4px 0;font-size:15px;line-height:1.45}
+.gate{overflow-y:auto}
+.gate form{padding-block:24px}
 body.locked .top,body.locked main{visibility:hidden}
 </style>
 </head>
@@ -191,8 +194,11 @@ body.locked .top,body.locked main{visibility:hidden}
     <label class="f" for="gatepw">Hasło
       <input type="password" id="gatepw" autocomplete="current-password" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="go" required>
     </label>
+    <label class="chk gatechk"><input type="checkbox" id="gateok" required>
+      <span>Oświadczam, że nie wprowadzam do aplikacji danych osobowych pacjentów (imienia i nazwiska, numeru PESEL, adresu, numeru telefonu ani innych danych pozwalających go zidentyfikować), a jedynie inicjały. Ponoszę pełną odpowiedzialność za dane pacjentów, które wprowadzam do aplikacji.</span></label>
     <button class="btn pri" type="submit">Wejdź</button>
     <p class="err" id="gateerr" role="alert"></p>
+    <p class="note" id="gatever"></p>
   </form>
 </div>
 <header class="top" id="top">
@@ -1251,7 +1257,7 @@ document.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)r
  if(act==='del'){if(delArm!==ds.id){delArm=ds.id;b.textContent='Na pewno usunąć?';return}delArm=null;DB.list=DB.list.filter(x=>x.id!==ds.id);if(!DB.list.length)DB.list.push(blank());if(!DB.list.some(x=>x.id===DB.cur))DB.cur=DB.list[0].id;persist();renderList();renderTop()}
 });
 $('regen').onclick=renderSum;
-const APPV='2026-11-22.6';
+const APPV='2026-11-22.7',APPDATE='22.11.2026';
 const ioMsg=t=>{$('iomsg').textContent=t};
 const exportAll=async()=>{const data={app:'wywiad-labnuk',format:1,exported:new Date().toISOString(),list:DB.list};
  const name=`wywiady-${new Date().toISOString().slice(0,10)}.json`;const blob=new Blob([JSON.stringify(data,null,1)],{type:'application/json'});
@@ -1263,7 +1269,8 @@ $('impfile').addEventListener('change',async e=>{const f=e.target.files[0];e.tar
   DB.list.forEach(d=>(d.cc||[]).forEach(c=>{const t=(c.typ||[])[0];if(LEGACY[t])c.typ=[LEGACY[t]]}));
   persist();renderList();ioMsg(`Zaimportowano: ${add} nowych, ${upd} zaktualizowanych.`)}
  catch(err){ioMsg('To nie jest plik eksportu z tej aplikacji.')}});
-if($('ver'))$('ver').textContent='Wersja '+APPV;
+if($('ver'))$('ver').textContent='Wersja '+APPV+' · ostatnia zmiana '+APPDATE;
+if($('gatever'))$('gatever').textContent='Wersja '+APPV+' · ostatnia zmiana '+APPDATE;
 const showUpd=()=>{if($('updbar'))return;const b=document.createElement('button');b.id='updbar';b.className='updbar';b.textContent='Dostępna nowa wersja aplikacji. Stuknij, aby odświeżyć.';b.onclick=()=>location.reload();document.body.appendChild(b)};
 let SWREG=null;
 if('serviceWorker' in navigator&&(location.protocol==='https:'||location.hostname==='localhost')){
@@ -1308,6 +1315,7 @@ const unlock=()=>{$('gate').hidden=true;document.body.classList.remove('locked')
 let unlocked=false;try{unlocked=sessionStorage.getItem('wywiad-ok')===GATE}catch(e){}
 if(unlocked)unlock();else setTimeout(()=>{try{$('gatepw').focus()}catch(e){}},50);
 $('gateform').addEventListener('submit',async e=>{e.preventDefault();const v=$('gatepw').value.trim().toLowerCase();
+ if(!$('gateok').checked){$('gateerr').textContent='Zaznacz oświadczenie o danych pacjentów.';return}
  let h='';try{h=await sha('wywiad-labnuk:'+v)}catch(err){$('gateerr').textContent='Ta przeglądarka nie obsługuje logowania (wymagane HTTPS).';return}
  if(h===GATE){try{sessionStorage.setItem('wywiad-ok',GATE)}catch(err){}$('gatepw').value='';$('gateerr').textContent='';unlock()}
  else{$('gateerr').textContent='Nieprawidłowe hasło.';$('gatepw').select()}});
