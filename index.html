@@ -106,6 +106,7 @@ h3{font-size:15px;font-weight:600;margin:24px 0 6px;color:var(--mute)}
 textarea,input[type=text],input[type=number],input[type=date],select{width:100%;font-size:16px;border:1px solid var(--line);border-radius:10px;padding:10px 12px;background:var(--bg);color:var(--pen);min-height:44px}
 textarea{min-height:56px;resize:vertical;line-height:1.45}
 textarea:focus,input:focus,select:focus,button:focus-visible{outline:2px solid var(--pen);outline-offset:1px}
+input.bad{border-color:var(--red);outline-color:var(--red)}
 .notebtn{justify-self:start;border:0;background:none;color:var(--mute);font-size:14px;padding:8px 0;min-height:40px;cursor:pointer;text-decoration:underline;text-underline-offset:3px}
 label.f{display:grid;gap:4px;font-size:14px;color:var(--mute)}
 .flds{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px}
@@ -1013,7 +1014,12 @@ const pyTxt=()=>{const f=fv(ITEMS.x1);const n=parseFloat((f.q1||[])[0]),y=parseF
 const badges=i=>(must55(i)?`<span class="badge must">obowiązkowo ≥55 r.ż.</span>`:'')+(i.opt?`<span class="badge">specjalistyczny</span>`:'');
 const noteHTML=(id,n,lbl)=>n||ans(id).nOpen?`<textarea id="n-${id}" data-note="${id}" placeholder="Uwagi…" aria-label="Uwagi: ${esc(lbl)}">${esc(n)}</textarea>`:`<button class="notebtn" data-addnote="${id}">Dopisz uwagę</button>`;
 const groupsHTML=i=>(i.q||[]).map((g,n)=>grpHTML(`i|${i.id}|${n}`,g.l,g.o,g.s,g.g)).join('');
-const fldHTML=i=>(i.f||[]).map(f=>`<label class="f" style="max-width:260px">${esc(f.l)}<input type="date" data-fld="${i.id}|${f.k}" id="f-${i.id}-${f.k}" value="${esc(fv(i)[f.k]||'')}"></label>`).join('');
+/* dates are typed as DD.MM.RRRR on the numeric keypad (dots insert themselves) and stored as YYYY-MM-DD */
+const toDMY=iso=>{const m=/^(\d{4})-(\d{2})-(\d{2})$/.exec(iso||'');return m?`${m[3]}.${m[2]}.${m[1]}`:''};
+const fromDMY=v=>{const m=/^(\d{2})\.(\d{2})\.(\d{4})$/.exec(v);if(!m)return'';const d=+m[1],mo=+m[2],y=+m[3],dt=new Date(y,mo-1,d);
+ if(dt.getFullYear()!==y||dt.getMonth()!==mo-1||dt.getDate()!==d||y<1900||dt>new Date(Date.now()+864e5*366))return'';return `${m[3]}-${m[2]}-${m[1]}`};
+const dmyInput=(key,iso,id)=>`<input type="text" inputmode="numeric" pattern="[0-9.]*" placeholder="DD.MM.RRRR" maxlength="10" autocomplete="off" data-dmy="${key}" id="${id}" value="${esc(toDMY(iso))}">`;
+const fldHTML=i=>(i.f||[]).map(f=>`<label class="f" style="max-width:260px">${esc(f.l)}${dmyInput(`f|${i.id}|${f.k}`,fv(i)[f.k]||'',`f-${i.id}-${f.k}`)}</label>`).join('');
 const itemHTML=i=>{
  if(i.g)return `<h3${i.g==='Czerwone flagi'?' style="color:var(--red)"':''}>${esc(i.g)}</h3>`;
  if(!iv(i))return '';
@@ -1032,7 +1038,7 @@ const pGrp=(k,note)=>{const o=(k==='mar'?MAR[SEX()]:PQ[k][1]).split('|');if(!not
  return `<div class="cg"><span class="cl">${esc(PQ[k][0])}</span><div>${chipsHTML('p|'+k,o,PQ[k][2],getArr('p|'+k))}${pNote(k)}</div></div>`};
 const introHTML=()=>{const p=cur().p;return `<h2>Dane pacjenta</h2>
  ${pGrp('sex')}
- <div class="flds" style="margin:10px 0"><label class="f">Wiek (lata)<input type="number" inputmode="numeric" data-p="age" id="p-age" value="${esc(p.age)}"></label><label class="f">lub data urodzenia<input type="date" data-p="dob" id="p-dob" value="${esc(p.dob)}"></label><label class="f">Inicjały<input type="text" data-p="name" id="p-name" value="${esc(p.name)}" autocapitalize="characters"></label><label class="f">Data wywiadu<input type="date" data-p="date" id="p-date" value="${esc(p.date)}"></label></div>
+ <div class="flds" style="margin:10px 0"><label class="f">Wiek (lata)<input type="number" inputmode="numeric" data-p="age" id="p-age" value="${esc(p.age)}"></label><label class="f">lub data urodzenia${dmyInput('p|dob',p.dob,'p-dob')}</label><label class="f">Inicjały<input type="text" data-p="name" id="p-name" value="${esc(p.name)}" autocapitalize="characters"></label><label class="f">Data wywiadu${dmyInput('p|date',p.date,'p-date')}</label></div>
  <div class="det" style="padding:0">${pGrp('mar',1)}${pGrp('place',1)}${pGrp('job',1)}</div>
  <h2>Powód zgłoszenia</h2><div class="det" style="padding:0">${pGrp('goal',1)}${pGrp('where',1)}</div>
  <h2>Przebieg wstępu</h2>`};
@@ -1184,6 +1190,11 @@ let tmr;const later=()=>{clearTimeout(tmr);tmr=setTimeout(()=>{save();renderNav(
 document.addEventListener('input',e=>{const t=e.target,d=cur(),ds=t.dataset;
  if(ds.note)setA(ds.note,{n:t.value});
  else if(ds.fld){const[i,k]=ds.fld.split('|');const a=ans(i);setA(i,{f:Object.assign(a.f||{},{[k]:t.value})})}
+ else if(ds.dmy){const dg=t.value.replace(/\D/g,'').slice(0,8);const f=dg.slice(0,2)+(dg.length>2?'.'+dg.slice(2,4):'')+(dg.length>4?'.'+dg.slice(4):'');if(t.value!==f)t.value=f;
+  let iso=fromDMY(f);const r=ds.dmy.split('|');if(r[1]==='dob'&&iso&&new Date(iso)>new Date())iso='';
+  t.classList.toggle('bad',dg.length===8&&!iso);
+  if(r[0]==='p'){d.p[r[1]]=iso}else{const a=ans(r[1]);setA(r[1],{f:Object.assign(a.f||{},{[r[2]]:iso})})}
+  if(r[1]==='dob'){save();renderTop();renderNav();return}}
  else if(ds.p)d.p[ds.p]=t.value;
  else if(ds.ccn){const[x,k]=ds.ccn.split('|');d.cc[x][k]=t.value}
  else if(ds.pn)d.p[ds.pn+'_n']=t.value;
@@ -1235,7 +1246,7 @@ document.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)r
  if(act==='del'){if(delArm!==ds.id){delArm=ds.id;b.textContent='Na pewno usunąć?';return}delArm=null;DB.list=DB.list.filter(x=>x.id!==ds.id);if(!DB.list.length)DB.list.push(blank());if(!DB.list.some(x=>x.id===DB.cur))DB.cur=DB.list[0].id;persist();renderList();renderTop()}
 });
 $('regen').onclick=renderSum;
-const APPV='2026-11-22.3';
+const APPV='2026-11-22.4';
 const ioMsg=t=>{$('iomsg').textContent=t};
 const exportAll=async()=>{const data={app:'wywiad-labnuk',format:1,exported:new Date().toISOString(),list:DB.list};
  const name=`wywiady-${new Date().toISOString().slice(0,10)}.json`;const blob=new Blob([JSON.stringify(data,null,1)],{type:'application/json'});
