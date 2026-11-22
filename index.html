@@ -1094,7 +1094,7 @@ const secHTML=s=>{const F=flow(),vi=F.all.indexOf(s),prev=F.all[vi-1],next=F.all
  ${calcsBlock(s.pw?PCALC[s.pw.id]:SCALC[s.id])}
  <div class="pager">${prev?`<button class="btn ghost" data-go="${prev.id}">← ${esc(prev.t)}</button>`:'<span></span>'}${isClose||!next?`<span class="btns" style="margin:0">${next?`<button class="btn ghost" data-go="${next.id}">Dodatkowo: ${esc(next.t)}</button>`:''}<button class="btn pri" data-view="podsumowanie">Podsumowanie →</button></span>`:`<button class="btn pri" data-go="${next.id}">${esc(next.t)} →</button>`}</div>`};
 
-const navBtn=(s,chip,sub,opt)=>{const[d,t]=secCount(s);const st=d>=t?'ok':(opt&&!d)?'':'todo';return `<button data-go="${s.id}" class="${sub&&!chip?'sub':''} ${st}" aria-current="${s.id===SECI}"><span>${esc(s.t)}</span><span class="n ${d===t?'full':''}">${d}/${t}</span></button>`};
+const navBtn=(s,chip,sub,opt)=>{const[d,t]=secCount(s);const st=d>=t?'ok':'todo';return `<button data-go="${s.id}" class="${sub&&!chip?'sub':''} ${st}" aria-current="${s.id===SECI}"><span>${esc(s.t)}</span><span class="n ${d===t?'full':''}">${d}/${t}</span></button>`};
 const navHTML=chip=>{const F=flow(),gap=t=>chip?'':`<div class="gap">${t}</div>`;
  return F.main.map(s=>navBtn(s,chip,!!s.pw)).join('')+(F.rel.length?gap('Dodatkowo: układy powiązane')+F.rel.map(s=>navBtn(s,chip,1,1)).join(''):'')+(F.other.length?gap(F.rel.length?'Pozostałe układy':'Dodatkowo: układy')+F.other.map(s=>navBtn(s,chip,1,1)).join(''):'')};
 
@@ -1261,7 +1261,7 @@ document.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)r
  if(act==='del'){if(delArm!==ds.id){delArm=ds.id;b.textContent='Na pewno usunąć?';return}delArm=null;DB.list=DB.list.filter(x=>x.id!==ds.id);if(!DB.list.length)DB.list.push(blank());if(!DB.list.some(x=>x.id===DB.cur))DB.cur=DB.list[0].id;persist();renderList();renderTop()}
 });
 $('regen').onclick=renderSum;
-const APPV='2026-11-22.8',APPDATE='22.11.2026';
+const APPV='2026-11-22.9',APPDATE='22.11.2026';
 const ioMsg=t=>{$('iomsg').textContent=t};
 const exportAll=async()=>{const data={app:'wywiad-labnuk',format:1,exported:new Date().toISOString(),list:DB.list};
  const name=`wywiady-${new Date().toISOString().slice(0,10)}.json`;const blob=new Blob([JSON.stringify(data,null,1)],{type:'application/json'});
