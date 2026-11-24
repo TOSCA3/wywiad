@@ -111,6 +111,9 @@ textarea,input[type=text],input[type=number],input[type=date],select{width:100%;
 textarea{min-height:56px;resize:vertical;line-height:1.45}
 textarea:focus,input:focus,select:focus,button:focus-visible{outline:2px solid var(--pen);outline-offset:1px}
 input.bad{border-color:var(--red);outline-color:var(--red)}
+.psysafe{border:1.5px solid var(--line);background:var(--panel);border-radius:12px;padding:12px 14px;margin:10px 0;line-height:1.5}
+.psysafe.hi{border-color:var(--red);background:var(--redbg)}
+.psysafe.hi>b:first-child{color:var(--red)}
 .updbar{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:60;border:0;border-radius:12px;background:var(--pen);color:var(--penink);font-weight:600;padding:14px 18px;min-height:48px;box-shadow:0 6px 24px rgba(0,0,0,.2);cursor:pointer;max-width:calc(100% - 32px)}
 .notebtn{justify-self:start;border:0;background:none;color:var(--mute);font-size:14px;padding:8px 0;min-height:40px;cursor:pointer;text-decoration:underline;text-underline-offset:3px}
 label.f{display:grid;gap:4px;font-size:14px;color:var(--mute)}
@@ -740,6 +743,51 @@ const PATHS=[
    Y('wy6','Nowe kosmetyki, detergenty, kontakt z roślinami lub zwierzętami'),
    Y('wy7','Podobne zmiany u domowników'),
    'st6','o7','k1','r13']},
+ {id:'psych',label:'obniżony nastrój',title:'psychiatryczny',sys:[],
+  alts:[{label:'lęk',C:'stały niepokój|napady paniki|lęk w określonych sytuacjach|zamartwianie się'},{label:'myśli samobójcze',C:'bierne (życzenie śmierci)|czynne|z planem|z zamiarem realizacji'}],
+  C:'smutek|pustka|drażliwość|apatia|beznadzieja',
+  E:'stres|samotność|konflikty|alkohol|rano|wieczorem',L:'wsparcie bliskich|leczenie|psychoterapia|aktywność fizyczna|sen|nic nie pomaga',
+  items:[G('Ryzyko samobójcze'),
+   RF('ps1','Myśli rezygnacyjne','„lepiej byłoby nie żyć”, życzenie śmierci, chęć zaśnięcia i nieobudzenia się'),
+   RF('ps2','Myśli samobójcze czynne','myśli o odebraniu sobie życia',{q:[Q('Jak często','rzadko|kilka razy w tygodniu|codziennie|stale',1)]}),
+   RF('ps3','Plan samobójczy','sposób, miejsce, czas',{q:[Q('Które','sposób|miejsce|czas')]}),
+   RF('ps4','Zamiar realizacji, przygotowania','gromadzenie leków, list pożegnalny, rozdawanie rzeczy, porządkowanie spraw',{q:[Q('Które','zamiar realizacji|gromadzenie leków|list pożegnalny|rozdawanie rzeczy|porządkowanie spraw')]}),
+   RF('ps5','Dostęp do środków','',{q:[Q('Które','leki|broń|wysokość|substancje toksyczne|inne')]}),
+   RF('ps6','Wcześniejsze próby samobójcze','',{q:[Q('Kiedy','w ostatnich 3 miesiącach|dawniej'),Q('','kilka prób|wymagała leczenia')]}),
+   RF('ps7','Samookaleczenia','',{q:[Q('','obecnie|w przeszłości|cięcie|przypalanie|inne')]}),
+   RF('ps8','Myśli o skrzywdzeniu innych osób'),
+   O('ps9','Czynniki chroniące','',[Q('','rodzina|dzieci|wsparcie bliskich|przekonania religijne|plany na przyszłość|leczenie, terapia|zwierzęta|brak')]),
+   G('Objawy depresyjne'),
+   Y('pd1','Obniżony nastrój przez większość dnia','',0,{q:[Q('Od','<2 tyg.|2 tyg.–2 mies.|>2 mies.|>2 lata',1)]}),
+   Y('pd2','Utrata zainteresowań i przyjemności (anhedonia)'),
+   Y('pd3','Spadek energii, męczliwość'),
+   Y('pd4','Zaburzenia snu','',0,{q:[Q('Które','trudności z zasypianiem|wybudzanie w nocy|wczesne budzenie|nadmierna senność')]}),
+   Y('pd5','Zmiana apetytu lub masy ciała','',0,{q:[Q('Które','spadek apetytu|wzrost apetytu|chudnięcie|tycie')]}),
+   Y('pd6','Spowolnienie lub pobudzenie psychoruchowe','',0,{q:[Q('Które','spowolnienie|pobudzenie')]}),
+   Y('pd7','Poczucie winy lub bezwartościowości'),
+   Y('pd8','Zaburzenia koncentracji, trudności z podejmowaniem decyzji'),
+   Y('pd9','Poczucie beznadziei'),
+   Y('pd10','Dobowe wahania nastroju','',0,{q:[Q('','gorzej rano|gorzej wieczorem',1)]}),
+   G('Lęk'),
+   Y('pa1','Stały niepokój, zamartwianie się'),
+   Y('pa2','Napady paniki','',0,{q:[Q('Objawy','kołatanie serca|duszność|zawroty głowy|drżenie|poty|lęk przed śmiercią|poczucie nierealności'),Q('Jak często','codziennie|co tydzień|rzadziej',1)]}),
+   Y('pa3','Unikanie sytuacji z powodu lęku','',0,{q:[Q('Które','wychodzenie z domu|tłum|komunikacja publiczna|sytuacje społeczne|inne')]}),
+   Y('pa4','Natrętne myśli lub czynności (obsesje, kompulsje)'),
+   Y('pa5','Objawy po traumatycznym przeżyciu','',0,{q:[Q('Które','koszmary senne|natrętne wspomnienia|unikanie przypomnień|nadmierna czujność')]}),
+   G('Inne objawy'),
+   Y('pm1','Okresy podwyższonego nastroju lub nadmiernej energii','przesiewowo w kierunku choroby afektywnej dwubiegunowej',0,{q:[Q('Które','zmniejszona potrzeba snu|gonitwa myśli|wielomówność|ryzykowne wydatki|ryzykowne zachowania')]}),
+   RF('pm2','Omamy','słyszenie głosów, widzenie rzeczy, których inni nie widzą',{q:[Q('Które','słuchowe|wzrokowe|głosy nakazujące|głosy komentujące')]}),
+   Y('pm3','Urojenia','przekonanie o prześladowaniu, odnoszeniu, wpływie',0,{q:[Q('Które','prześladowcze|odnoszące|wpływu|wielkościowe|winy')]}),
+   Y('pm4','Zaburzenia pamięci lub orientacji'),
+   G('Tło'),
+   Y('pt1','Wcześniejsze leczenie psychiatryczne','',0,{q:[Q('Które','poradnia|hospitalizacja|psychoterapia|leki')]}),
+   O('pt2','Rozpoznania psychiatryczne w przeszłości','',[Q('','depresja|choroba afektywna dwubiegunowa|zaburzenia lękowe|schizofrenia|uzależnienie|zaburzenia odżywiania|zaburzenia osobowości|brak')]),
+   Y('pt3','Choroby psychiczne lub samobójstwa w rodzinie','',0,{q:[Q('Które','depresja|choroba afektywna dwubiegunowa|schizofrenia|uzależnienie|samobójstwo')]}),
+   's4','s5','s6',
+   O('pt4','Sytuacja życiowa','',[Q('','mieszka sam|samotność|bezrobocie|problemy finansowe|przemoc w domu|niedawna strata')]),
+   'x2','x3',
+   Y('pt5','Leki mogące wpływać na nastrój','np. glikokortykosteroidy, interferon'),
+   Y('pt6','Choroby somatyczne mogące dawać objawy psychiczne','',0,{q:[Q('Które','choroba tarczycy|niedokrwistość|przewlekły ból|choroba nowotworowa|choroba neurologiczna')]})]},
  {id:'inne',label:'inne',sys:[],S:LOCG,items:[]}
 ];
 const PBY={},PLAB=[];PATHS.forEach(p=>{p.title=p.title||p.label;[{label:p.label}].concat(p.alts||[]).forEach(o=>{PBY[o.label]={p,o};PLAB.push(o.label)});p.sec={id:'pw-'+p.id,t:'Wywiad: '+p.title,en:'Focused history',pw:p,items:[]};
@@ -766,7 +814,7 @@ Object.entries(XQ).forEach(([id,o])=>{const i=ITEMS[id];if(i)i.q=[Q('Które',o)]
 const PSEC=PATHS.map(p=>p.sec);
 const pathOf=c=>{const e=PBY[(c.typ||[])[0]];return e?e.p:null};
 const cfgOf=c=>{const e=PBY[(c.typ||[])[0]];return e?Object.assign({},e.p,e.o):null};
-const chosen=()=>{const s=[];cur().cc.forEach(c=>{const p=pathOf(c);if(p&&p.items.length&&!s.includes(p))s.push(p)});return s};
+const chosen=()=>{const s=[];cur().cc.forEach(c=>{const p=pathOf(c);if(p&&p.items.length&&!s.includes(p))s.push(p)});if(cur().psych){const p=PATHS.find(x=>x.id==='psych');if(!s.includes(p))s.push(p)}return s};
 const ccGroups=c=>{const P=cfgOf(c),g=[];const a=(k,L,l,o,s,x)=>g.push(Object.assign({k,L,l,o:o.split('|'),s:!!s},x||{}));
  if(!P)return g;
  if(P.S)a('S','S',P.Sg?'Okolica brzucha':'Umiejscowienie',P.S,0,{g:P.Sg||''});
@@ -922,11 +970,26 @@ const CALCS={
   r:s=>s<=20?'stan pacjenta bardzo ciężki, całkowicie zależny':s<=85?'stan średnio ciężki, częściowo zależny':'stan lekki, w dużej mierze samodzielny'},
  cadptl:{n:'Prawdopodobieństwo istotnej choroby wieńcowej (model RF-CL, ESC 2024)',kind:'link',url:'https://www.mp.pl/kalkulatory/367646,prawdopodobienstwo-istotnej-choroby-wiencowej',h:'Model opiera się na tabelach z wytycznych ESC (wiek, płeć, charakter bólu lub duszność, liczba czynników ryzyka). Nie odtwarzam go z pamięci, żeby nie podać błędnych wartości; licz na mp.pl (wymaga zalogowania). ≤5%: rozważ odstąpienie od diagnostyki; >5–15%: skoryguj o dodatkowe dane lub CACS; wyżej: badania nieinwazyjne.'},
  gcaps:{n:'GCAPS – prawdopodobieństwo olbrzymiokomórkowego zapalenia tętnic',kind:'link',url:'https://www.mp.pl/kalkulatory/439892,GCAPS',h:'Wieloskładnikowa skala z wynikami badań; licz na mp.pl (wymaga zalogowania).'},
+ cssrs:{n:'C-SSRS – przesiewowa ocena ryzyka samobójczego (Columbia-Suicide Severity Rating Scale)',kind:'lvl',h:'Pytania 1–5 dotyczą ostatniego miesiąca. Jeśli odpowiedź na pytanie 2 brzmi NIE, przejdź od razu do pytania 6.',c:[
+  {k:'q1',l:'1. Czy chciał(a) Pan(i) nie żyć albo zasnąć i się nie obudzić?',p:1},
+  {k:'q2',l:'2. Czy miał(a) Pan(i) myśli o odebraniu sobie życia?',p:1},
+  {k:'q3',l:'3. Czy myślał(a) Pan(i), w jaki sposób mógłby / mogłaby to zrobić?',p:1},
+  {k:'q4',l:'4. Czy miał(a) Pan(i) takie myśli z zamiarem ich realizacji?',ch:'w odróżnieniu od: „mam takie myśli, ale na pewno nic nie zrobię”',p:1},
+  {k:'q5',l:'5. Czy zaczął / zaczęła Pan(i) obmyślać lub obmyślił(a) szczegóły? Czy zamierzał(a) Pan(i) ten plan zrealizować?',p:1},
+  {k:'q6',l:'6. Czy kiedykolwiek zrobił(a), zaczął / zaczęła robić lub przygotowywał(a) coś, by odebrać sobie życie?',ch:'np. przyjęcie leków, gromadzenie leków, list pożegnalny, rozdawanie rzeczy, wyjście na dach',o:[['nie',0],['tak, ponad 3 miesiące temu',1],['tak, w ostatnich 3 miesiącach',2]]}],
+  lvl:v=>v.q4||v.q5||v.q6==='tak, w ostatnich 3 miesiącach'?'ryzyko wysokie':v.q3||v.q6==='tak, ponad 3 miesiące temu'?'ryzyko umiarkowane':v.q1||v.q2?'ryzyko niskie':'brak wskazań',
+  r:(s,x,v)=>v.q4||v.q5||v.q6==='tak, w ostatnich 3 miesiącach'?'nie zostawiaj pacjenta samego, zabezpiecz środki, pilna konsultacja psychiatryczna lub przekazanie do szpitala; w bezpośrednim zagrożeniu życia 112':v.q3||v.q6==='tak, ponad 3 miesiące temu'?'konsultacja psychiatryczna, plan bezpieczeństwa, przekaż numery pomocy':v.q1||v.q2?'dalsza ocena, przekaż numery pomocy, rozważ konsultację':'w przesiewie brak myśli i zachowań samobójczych'},
+ phq9:{n:'PHQ-9 (Patient Health Questionnaire-9), nasilenie objawów depresji',h:'Ostatnie 2 tygodnie: jak często dokuczały pacjentowi poniższe problemy.',c:[
+  ...['Niewielkie zainteresowanie lub odczuwanie przyjemności z wykonywanych czynności','Przygnębienie, obniżony nastrój, poczucie beznadziei','Problemy z zaśnięciem, przerywany sen albo nadmierna senność','Zmęczenie lub brak energii','Brak apetytu albo przejadanie się','Poczucie, że jest się do niczego, zawiodło się siebie lub rodzinę','Problemy ze skupieniem się, np. przy czytaniu lub oglądaniu telewizji','Spowolnienie ruchów lub mowy zauważalne dla innych albo przeciwnie, niepokój i nadmierna ruchliwość','Myśli, że lepiej byłoby umrzeć, albo o zrobieniu sobie krzywdy'].map((l,i)=>({k:'q'+(i+1),l:(i+1)+'. '+l,o:[['wcale',0],['kilka dni',1],['ponad połowę dni',2],['niemal codziennie',3]]}))],
+  r:(s,x,v)=>(s<=4?'brak lub minimalne objawy':s<=9?'łagodne objawy depresji':s<=14?'umiarkowane objawy depresji':s<=19?'umiarkowanie ciężkie objawy depresji':'ciężkie objawy depresji')+(v.q9&&v.q9!=='wcale'?'; dodatnie pytanie 9: oceń ryzyko samobójcze (C-SSRS)':'')},
+ gad7:{n:'GAD-7 (Generalized Anxiety Disorder-7), nasilenie lęku',h:'Ostatnie 2 tygodnie: jak często dokuczały pacjentowi poniższe problemy.',c:[
+  ...['Zdenerwowanie, lęk lub napięcie','Niemożność powstrzymania lub kontrolowania zamartwiania się','Nadmierne zamartwianie się różnymi sprawami','Trudności z odprężeniem się','Niepokój ruchowy, trudność z usiedzeniem w miejscu','Łatwe irytowanie się, drażliwość','Lęk, że może się wydarzyć coś okropnego'].map((l,i)=>({k:'q'+(i+1),l:(i+1)+'. '+l,o:[['wcale',0],['kilka dni',1],['ponad połowę dni',2],['niemal codziennie',3]]}))],
+  r:s=>(s<=4?'minimalny lęk':s<=9?'łagodny lęk':s<=14?'umiarkowany lęk':'ciężki lęk')+(s>=10?'; ≥10 pkt: wskazana dalsza diagnostyka zaburzeń lękowych':'')},
  mmrc:{n:'Skala duszności mMRC (modified Medical Research Council)',c:[
   {k:'s',l:'Stopień duszności',o:[['0: tylko przy dużym wysiłku',0],['1: przy szybkim marszu po płaskim lub pod niewielkie wzniesienie',1],['2: chodzi wolniej niż rówieśnicy lub musi się zatrzymywać',2],['3: zatrzymuje się po ok. 100 m lub kilku minutach marszu',3],['4: nie wychodzi z domu, duszność przy ubieraniu',4]]}],
   r:s=>s>=2?'duszność istotna (≥2): w POChP (przewlekłej obturacyjnej chorobie płuc) kwalifikuje do grupy z większym nasileniem objawów wg GOLD':'mniej nasilona duszność'}
 };
-const PCALC={klatka:['marburg','cadptl','wellsPE','geneva'],dusznosc:['wellsPE','geneva','mmrc','crb65'],kaszel:['crb65','mcisaac'],brzuch:['alvarado'],zum:['qsofa'],glowa:['ottawa','gcaps'],zawroty:['abcd2'],kolatanie:['cha2ds2va','hasbled'],goraczka:['qsofa','crb65'],obrzeki:['wellsDVT'],oslabienie:['abcd2','phq2','barthel','stopbang']};
+const PCALC={psych:['cssrs','phq9','gad7','auditc'],klatka:['marburg','cadptl','wellsPE','geneva'],dusznosc:['wellsPE','geneva','mmrc','crb65'],kaszel:['crb65','mcisaac'],brzuch:['alvarado'],zum:['qsofa'],glowa:['ottawa','gcaps'],zawroty:['abcd2'],kolatanie:['cha2ds2va','hasbled'],goraczka:['qsofa','crb65'],obrzeki:['wellsDVT'],oslabienie:['abcd2','phq2','barthel','stopbang']};
 const SCALC={subst:['auditc'],physio:['bmi','phq2','stopbang']};
 const cx=()=>{const d=cur(),b=d.calc&&d.calc.bmi?bmiOf(d.calc.bmi):null;return{age:age(),sex:SEX(),bmi:b?b.b:null}};
 const cst=id=>{const d=cur();d.calc=d.calc||{};return d.calc[id]=d.calc[id]||{}};
@@ -935,6 +998,7 @@ const critVal=(C,c,st,x)=>{const a=c.auto?c.auto(x):null;const v=a!=null?a:st[c.
 const bmiOf=st=>{const w=parseFloat(String(st.w||'').replace(',','.')),h=parseFloat(String(st.h||'').replace(',','.'))/100;if(!(w>0&&h>0))return null;const b=w/(h*h);return{b,cat:b<18.5?'niedowaga':b<25?'masa ciała prawidłowa':b<30?'nadwaga':b<35?'otyłość I stopnia':b<40?'otyłość II stopnia':'otyłość III stopnia'}};
 const calcRes=id=>{const C=CALCS[id],st=cst(id),x=cx();
  if(C.kind==='link')return{score:'',txt:'',touched:false};
+ if(C.kind==='lvl'){const st=cst(id),x=cx(),v={};C.c.forEach(c=>{v[c.k]=critVal(C,c,st,x).v});return{score:C.lvl(v),txt:C.r(0,x,v),touched:Object.keys(st).length>0,complete:true}}
  if(C.kind==='bmi'){const r=bmiOf(st);return r?{score:fnum(r.b)+' kg/m²',txt:r.cat+' (kategorie WHO)',touched:true}:{score:'–',txt:'wpisz masę i wzrost',touched:false}}
  let s=0,n=0,anyOpt=true;const v={};C.c.forEach(c=>{const r=critVal(C,c,st,x);s+=r.pts;n+=r.q;v[c.k]=r.v;if(c.o&&r.v==null)anyOpt=false});
  const touched=Object.keys(st).length>0;
@@ -945,16 +1009,16 @@ const calcHTML=id=>{const C=CALCS[id],st=cst(id),x=cx(),R=calcRes(id);
  let body='';
  if(C.kind==='bmi')body=`<div class="flds"><label class="f">Masa ciała (kg)<input type="number" inputmode="decimal" data-bmi="w" value="${esc(st.w||'')}"></label><label class="f">Wzrost (cm)<input type="number" inputmode="decimal" data-bmi="h" value="${esc(st.h||'')}"></label></div>`;
  else body=`<div class="critl">${C.c.map(c=>{const r=critVal(C,c,st,x),tag=c.src?`<span class="badge">${SRC[c.src]}</span>`:'';
-  if(c.o)return `<div class="cg"><span class="cl">${esc(c.l)}${tag}${r.auto?'<span class="hint">z danych pacjenta</span>':''}</span><div class="cs">${c.o.map(o=>`<button class="chip" data-cro="${id}|${c.k}" data-o="${esc(o[0])}" aria-pressed="${r.v===o[0]}"${r.auto?' disabled':''}>${esc(o[0])} <small>(${o[1]>0?'+':''}${fnum(o[1])})</small></button>`).join('')}</div></div>`;
+  if(c.o)return `<div class="cg"><span class="cl">${esc(c.l)}${tag}${r.auto?'<span class="hint">z danych pacjenta</span>':''}${c.ch?`<span class="chint">${esc(c.ch)}</span>`:''}</span><div class="cs">${c.o.map(o=>`<button class="chip" data-cro="${id}|${c.k}" data-o="${esc(o[0])}" aria-pressed="${r.v===o[0]}"${r.auto?' disabled':''}>${esc(o[0])}${C.kind==='lvl'?'':` <small>(${o[1]>0?'+':''}${fnum(o[1])})</small>`}</button>`).join('')}</div></div>`;
   if(r.auto)return `<div class="crit auto" aria-pressed="${r.v}"><span>${esc(c.l)} <span class="hint">z danych pacjenta: ${r.v?'tak':'nie'}</span></span><span class="pts">${r.v?'+'+fnum(c.p):'0'}</span></div>`;
-  return `<button class="crit" data-crit="${id}|${c.k}" aria-pressed="${r.v}"><span>${esc(c.l)}${tag}${c.ch?`<span class="chint">${esc(c.ch)}</span>`:''}</span><span class="pts">${c.p>0?'+':''}${fnum(c.p)}</span></button>`}).join('')}</div>`;
+  return `<button class="crit" data-crit="${id}|${c.k}" aria-pressed="${r.v}"><span>${esc(c.l)}${tag}${c.ch?`<span class="chint">${esc(c.ch)}</span>`:''}</span><span class="pts">${C.kind==='lvl'?(r.v?'TAK':'–'):(c.p>0?'+':'')+fnum(c.p)}</span></button>`}).join('')}</div>`;
  return `<div class="calc" data-calc="${id}"><div class="chd"><b>${esc(C.n)}</b><span class="res">${esc(R.score)}</span></div>${C.h?`<p class="hint" style="margin:0">${esc(C.h)}</p>`:''}${body}<p class="interp">→ ${esc(R.txt)}</p></div>`};
 const calcsBlock=ids=>ids&&ids.length?`<h3>Skale i kalkulatory</h3>${ids.map(calcHTML).join('')}`:'';
 const recalc=id=>document.querySelectorAll(`.calc[data-calc="${id}"]`).forEach(el=>{el.outerHTML=calcHTML(id)});
 const calcNodes=()=>{const out=[],x=cx();Object.keys(CALCS).forEach(id=>{const C=CALCS[id];if(C.kind==='link')return;const R=calcRes(id);if(!R.touched)return;
- let crit='';if(!C.kind){const st=cst(id);crit=C.c.map(c=>{const r=critVal(C,c,st,x);if(c.o)return r.v!=null?`${lc(c.l).replace(/\?$/,'')}: ${r.v}`:'';return r.v?lc(c.l):''}).filter(Boolean).join('; ')}
- else{const st=cst(id);crit=`masa ciała ${st.w||'?'} kg, wzrost ${st.h||'?'} cm`}
- out.push({name:C.n,det:`${R.score}: ${R.txt}${crit?`; ${UL('kryteria')}: ${crit}`:''}`})});
+ let crit='';if(!C.kind||C.kind==='lvl'){const st=cst(id);crit=C.c.map(c=>{const r=critVal(C,c,st,x);const l=c.l.replace(/^\d+\.\s*/,'');if(c.o)return r.v!=null?`${lc(l).replace(/\?$/,'')}: ${r.v}`:'';return r.v?(C.kind==='lvl'?lc(l).replace(/\?$/,'')+': TAK':lc(l)):''}).filter(Boolean).join('; ')}
+ else if(C.kind==='bmi'){const st=cst(id);crit=`masa ciała ${st.w||'?'} kg, wzrost ${st.h||'?'} cm`}
+ out.push({name:C.n,det:`${R.score}${C.kind==='lvl'?'':''}: ${R.txt}${crit?`; ${UL('kryteria')}: ${crit}`:''}`})});
  return out.length?[{t:'h',s:'Skale i kalkulatory'},{t:'qo',items:out.map(o=>({name:o.name,det:o.det}))}]:[]};
 
 const DRUGS=["acenokumarol", "allopurynol", "alprazolam", "amiodaron", "amlodypina", "amoksycylina", "amoksycylina + kwas klawulanowy", "apiksaban", "atorwastatyna", "azytromycyna", "betahistyna", "bilastyna", "bisoprolol", "budezonid", "budezonid + formoterol", "budezonid z formoterolem", "bupropion", "cefuroksym", "cetyryzyna", "chlorochina", "cholekalcyferol (witamina D3)", "cilazapryl", "ciprofloksacyna", "citalopram", "dabigatran", "dapagliflozyna", "deksametazon", "deksketoprofen", "desloratadyna", "diazepam", "digoksyna", "diklofenak", "doksazosyna", "doksycyklina", "donepezil", "drotaweryna", "dulaglutyd", "duloksetyna", "empagliflozyna", "enalapryl", "eplerenon", "escitalopram", "esomeprazol", "ezetymib", "febuksostat", "fenofibrat", "finasteryd", "fluoksetyna", "flutykazon", "flutykazon z salmeterolem", "fosfomycyna", "furosemid", "gabapentyna", "gliklazyd", "glimepiryd", "hydrochlorotiazyd", "hydroksyzyna", "ibuprofen", "indapamid", "insulina", "insulina aspart", "insulina degludec", "insulina detemir", "insulina glargine", "insulina glulizynowa", "insulina lizpro", "insulina ludzka", "iwabradyna", "kandesartan", "karbamazepina", "karwedilol", "ketoprofen", "klarytromycyna", "klindamycyna", "klopidogrel", "kotrimoksazol", "kwas acetylosalicylowy", "kwas foliowy", "kwetiapina", "laktuloza", "lamotrygina", "lanzoprazol", "lerkanidypina", "lewetyracetam", "lewodopa + benserazyd", "lewodopa + karbidopa", "lewofloksacyna", "lewotyroksyna", "liraglutyd", "lizynopryl", "loperamid", "loratadyna", "lorazepam", "losartan", "mebeweryna", "meloksykam", "memantyna", "metamizol", "metformina", "metoprolol", "metotreksat", "metyloprednizolon", "mirtazapina", "moksonidyna", "mometazon", "monoazotan izosorbidu", "montelukast", "naproksen", "nebiwolol", "nimesulid", "nitrogliceryna", "olanzapina", "omeprazol", "pankreatyna", "pantoprazol", "paracetamol", "paroksetyna", "perindopryl", "potas", "potas (chlorek potasu)", "prasugrel", "prednizon", "pregabalina", "propafenon", "ramipryl", "rosuwastatyna", "rywaroksaban", "sakubitryl + walsartan", "salbutamol", "salmeterol + flutykazon", "semaglutyd", "sertralina", "simwastatyna", "sitagliptyna", "spironolakton", "tamsulosyna", "telmisartan", "tiamazol", "tikagrelor", "tiotropium", "torasemid", "tramadol", "trazodon", "trimetazydyna", "urapidyl", "walproinian", "walsartan", "warfaryna", "wenlafaksyna", "witamina D3", "zofenopryl", "zolpidem", "żelazo", "Abasaglar (insulina glargine)", "Acard (kwas acetylosalicylowy)", "Acenocumarol WZF (acenokumarol)", "Actrapid (insulina ludzka)", "Adenuric (febuksostat)", "Aerius (desloratadyna)", "Afobam (alprazolam)", "Agen (amlodypina)", "Aglan (meloksykam)", "Allertec (cetyryzyna)", "Allupol (allopurynol)", "Alprox (alprazolam)", "Amaryl (glimepiryd)", "Amertil (cetyryzyna)", "Amizepin (karbamazepina)", "Amlonor (amlodypina)", "Amlozek (amlodypina)", "Amoksiklav (amoksycylina + kwas klawulanowy)", "Amotaks (amoksycylina)", "Ampril (ramipryl)", "Anapran (naproksen)", "Anesteloc (pantoprazol)", "Apap (paracetamol)", "Apidra (insulina glulizynowa)", "Arechin (chlorochina)", "Areplex (klopidogrel)", "Aricept (donepezil)", "Arketis (paroksetyna)", "Asentra (sertralina)", "Aspirin (kwas acetylosalicylowy)", "Aspirin Cardio (kwas acetylosalicylowy)", "Atacand (kandesartan)", "Atarax (hydroksyzyna)", "Atoris (atorwastatyna)", "Atorvasterol (atorwastatyna)", "Atorvox (atorwastatyna)", "Atram (karwedilol)", "Augmentin (amoksycylina + kwas klawulanowy)", "Aulin (nimesulid)", "Avamina (metformina)", "Avamys (flutykazon)", "Azitrox (azytromycyna)", "Bespres (walsartan)", "Betaloc ZOK (metoprolol)", "Betaserc (betahistyna)", "Bibloc (bisoprolol)", "Bilaxten (bilastyna)", "Bioprazol (omeprazol)", "Bioxetin (fluoksetyna)", "Biseptol (kotrimoksazol)", "Bisocard (bisoprolol)", "Bisoratio (bisoprolol)", "Bixebra (iwabradyna)", "Brilique (tikagrelor)", "Calpol (paracetamol)", "Candepres (kandesartan)", "Cardura (doksazosyna)", "Ciprinol (ciprofloksacyna)", "Cipronex (ciprofloksacyna)", "Citabax (citalopram)", "Cital (citalopram)", "Claritine (loratadyna)", "Clatra (bilastyna)", "Concor (bisoprolol)", "Controloc (pantoprazol)", "Convulex (walproinian)", "Cordarone (amiodaron)", "Coronal (bisoprolol)", "Coryol (karwedilol)", "Cozaar (losartan)", "Crestor (rosuwastatyna)", "Cymbalta (duloksetyna)", "Dalacin (klindamycyna)", "Dalacin C (klindamycyna)", "Depakine Chrono (walproinian)", "Devikap (cholekalcyferol (witamina D3))", "Dexak (deksketoprofen)", "Dexaven (deksametazon)", "Diagen (gliklazyd)", "Diaprel MR (gliklazyd)", "Dilatrend (karwedilol)", "Diovan (walsartan)", "Diuver (torasemid)", "Duomox (amoksycylina)", "Duphalac (laktuloza)", "Duspatalin (mebeweryna)", "Ebixa (memantyna)", "Ebrantil (urapidyl)", "Efectin (wenlafaksyna)", "Efferalgan (paracetamol)", "Effox (monoazotan izosorbidu)", "Efient (prasugrel)", "Elicea (escitalopram)", "Eliquis (apiksaban)", "Emanera (esomeprazol)", "Enarenal (enalapryl)", "Encorton (prednizon)", "Entresto (sakubitryl + walsartan)", "Euthyrox (lewotyroksyna)", "Ezehron (ezetymib)", "Finlepsin (karbamazepina)", "Fokusin (tamsulosyna)", "Formetic (metformina)", "Forxiga (dapagliflozyna)", "Fromilid (klarytromycyna)", "Gensulin (insulina ludzka)", "Glibetic (glimepiryd)", "Gliclada (gliklazyd)", "Glucophage (metformina)", "Glucophage XR (metformina)", "Helicid (omeprazol)", "Humalog (insulina lizpro)", "Humulin (insulina ludzka)", "Hydroxyzinum (hydroksyzyna)", "Hypnogen (zolpidem)", "Ibufen (ibuprofen)", "Ibum (ibuprofen)", "Ibuprom (ibuprofen)", "Indapen (indapamid)", "Indix (indapamid)", "Inspra (eplerenon)", "Januvia (sitagliptyna)", "Jardiance (empagliflozyna)", "Kaldyum (potas (chlorek potasu))", "Kalipoz prolongatum (potas (chlorek potasu))", "Karbis (kandesartan)", "Keppra (lewetyracetam)", "Ketonal (ketoprofen)", "Ketrel (kwetiapina)", "Klabax (klarytromycyna)", "Klacid (klarytromycyna)", "Kreon (pankreatyna)", "Kventiax (kwetiapina)", "Lamitrin (lamotrygina)", "Lamotrix (lamotrygina)", "Lantus (insulina glargine)", "Lanzul (lanzoprazol)", "Laremid (loperamid)", "Lercan (lerkanidypina)", "Letrox (lewotyroksyna)", "Levemir (insulina detemir)", "Lisiprol (lizynopryl)", "Lorafen (lorazepam)", "Lorista (losartan)", "Losacor (losartan)", "Losec (omeprazol)", "Lozap (losartan)", "Lyrica (pregabalina)", "Madopar (lewodopa + benserazyd)", "Majamil (diklofenak)", "Medrol (metyloprednizolon)", "Metex (metotreksat)", "Metformax (metformina)", "Metizol (tiamazol)", "Metocard (metoprolol)", "Metocard ZK (metoprolol)", "Metypred (metyloprednizolon)", "Micardis (telmisartan)", "Milukante (montelukast)", "Milurit (allopurynol)", "Mirzaten (mirtazapina)", "Mixtard (insulina ludzka)", "Monkasta (montelukast)", "Mononit (monoazotan izosorbidu)", "Monural (fosfomycyna)", "Movalis (meloksykam)", "Mozarin (escitalopram)", "Nakom (lewodopa + karbidopa)", "Nalgesin (naproksen)", "Nasonex (mometazon)", "Nebicard (nebiwolol)", "Nebilet (nebiwolol)", "Nebivor (nebiwolol)", "Neurontin (gabapentyna)", "Nexium (esomeprazol)", "Nimesil (nimesulid)", "Nitromint (nitrogliceryna)", "No-Spa (drotaweryna)", "Nolpaza (pantoprazol)", "Norvasc (amlodypina)", "NovoRapid (insulina aspart)", "Nurofen (ibuprofen)", "Olfen (diklofenak)", "Olzapin (olanzapina)", "Omnic (tamsulosyna)", "Opacorden (amiodaron)", "Opokan (meloksykam)", "Ospamox (amoksycylina)", "Ozempic (semaglutyd)", "Panadol (paracetamol)", "Panrazol (pantoprazol)", "Physiotens (moksonidyna)", "Piramil (ramipryl)", "Plavix (klopidogrel)", "Polfenon (propafenon)", "Polhumin (insulina ludzka)", "Polocard (kwas acetylosalicylowy)", "Polopiryna (kwas acetylosalicylowy)", "Polprazol (omeprazol)", "Polpril (ramipryl)", "Poltram (tramadol)", "Polvertic (betahistyna)", "Pradaxa (dabigatran)", "Preductal (trimetazydyna)", "Preductal MR (trimetazydyna)", "Prenessa (perindopryl)", "Prestarium (perindopryl)", "Procoralan (iwabradyna)", "Proscar (finasteryd)", "Pulmicort (budezonid)", "Pyralgin (metamizol)", "Raenom (iwabradyna)", "Relanium (diazepam)", "Remirta (mirtazapina)", "Rexetin (paroksetyna)", "Romazic (rosuwastatyna)", "Rosucard (rosuwastatyna)", "Rosutrox (rosuwastatyna)", "Roswera (rosuwastatyna)", "Rybelsus (semaglutyd)", "Rytmonorm (propafenon)", "Salmex (salmeterol + flutykazon)", "Saxenda (liraglutyd)", "Seretide (salmeterol + flutykazon)", "Seronil (fluoksetyna)", "Seroxat (paroksetyna)", "Sertagen (sertralina)", "Simvacard (simwastatyna)", "Simvasterol (simwastatyna)", "Singulair (montelukast)", "Sintrom (acenokumarol)", "Siofor (metformina)", "Sobycor (bisoprolol)", "Sorbifer Durules (żelazo)", "Sortis (atorwastatyna)", "Spiriva (tiotropium)", "Spironol (spironolakton)", "Stilnox (zolpidem)", "Stimuloton (sertralina)", "Stoperan (loperamid)", "Sumamed (azytromycyna)", "Suvardio (rosuwastatyna)", "Symazide (gliklazyd)", "Symbicort (budezonid + formoterol)", "Tamsudil (tamsulosyna)", "Tardyferon (żelazo)", "Taromentin (amoksycylina + kwas klawulanowy)", "Tavanic (lewofloksacyna)", "Tegretol (karbamazepina)", "Telmizek (telmisartan)", "Tenox (amlodypina)", "Tertensif SR (indapamid)", "Thyrozol (tiamazol)", "Tolura (telmisartan)", "Torvacard (atorwastatyna)", "Toujeo (insulina glargine)", "Tramal (tramadol)", "Tresiba (insulina degludec)", "Trexan (metotreksat)", "Trifas (torasemid)", "Tritace (ramipryl)", "Trittico (trazodon)", "Trombex (klopidogrel)", "Trulicity (dulaglutyd)", "Tulip (atorwastatyna)", "Unidox (doksycyklina)", "Valsacor (walsartan)", "Vasilip (simwastatyna)", "Velaxin (wenlafaksyna)", "Ventolin (salbutamol)", "Verospiron (spironolakton)", "Victoza (liraglutyd)", "Vigantoletten (cholekalcyferol (witamina D3))", "Vivace (ramipryl)", "Vivacor (karwedilol)", "Voltaren (diklofenak)", "Warfin (warfaryna)", "Wegovy (semaglutyd)", "Xanax (alprazolam)", "Xarelto (rywaroksaban)", "Xartan (losartan)", "Yasnal (donepezil)", "Zahron (rosuwastatyna)", "Zinnat (cefuroksym)", "Zocor (simwastatyna)", "Zofenil (zofenopryl)", "Zoloft (sertralina)", "Zyllt (klopidogrel)", "Zyprexa (olanzapina)", "Zyrtec (cetyryzyna)"];
@@ -1084,11 +1148,16 @@ const flow=()=>{const ch=chosen(),f=[SB('intro'),SB('cc'),...ch.map(p=>p.sec),SB
  const sys=SEC.filter(s=>s.sys&&visible(s)&&!f.includes(s));
  const r=sys.filter(s=>rel.includes(s.id)),o=sys.filter(s=>!rel.includes(s.id));
  return{main:f,rel:r,other:o,all:f.concat(r,o)}};
+const psyHigh=()=>{const v={};const C=CALCS.cssrs,st=cst('cssrs'),x=cx();C.c.forEach(c=>{v[c.k]=critVal(C,c,st,x).v});return !!(v.q4||v.q5||v.q6==='tak, w ostatnich 3 miesiącach'||['ps3','ps4','ps8'].some(k=>ans(k).v==='+')||(ans('ps6').v==='+'&&((fv(ITEMS.ps6).q0)||[]).includes('w ostatnich 3 miesiącach')))};
+const psySafety=()=>`<div class="psysafe ${psyHigh()?'hi':''}" id="psysafe"><b>${psyHigh()?'Wysokie ryzyko samobójcze':'Gdy pojawiają się myśli samobójcze'}</b><br>Nie zostawiaj pacjenta samego, zapytaj wprost o plan i dostęp do środków, zgłoś prowadzącemu lub lekarzowi; przy wysokim ryzyku pilna konsultacja psychiatryczna, w bezpośrednim zagrożeniu życia <b>112</b>. Dla pacjenta: <b>800 70 2222</b> (Centrum Wsparcia dla osób dorosłych w kryzysie psychicznym, całodobowo, bezpłatnie), <b>116 123</b> (telefon wsparcia emocjonalnego dla dorosłych).</div>
+ <p class="lead">Moduł poza skryptem Lab-NUK: podstawowy wywiad psychiatryczny i skale przesiewowe (C-SSRS, PHQ-9, GAD-7). Nie zastępuje badania psychiatrycznego.</p>`;
+const psyToggle=()=>`<div class="btns" style="margin:4px 0 8px">${cur().psych?`<button class="btn" data-go="pw-psych">Przejdź do wywiadu psychiatrycznego →</button><button class="btn ghost" data-act="psyoff">Usuń wywiad psychiatryczny</button>`:`<button class="btn" data-act="psyon">Dodaj wywiad psychiatryczny</button><span class="note">gdy pacjent zgłasza obniżony nastrój, lęk lub myśli samobójcze</span>`}</div>`;
 const secHTML=s=>{const F=flow(),vi=F.all.indexOf(s),prev=F.all[vi-1],next=F.all[vi+1],isClose=s.id==='close';
  const lead=s.pw?'Pytania pod wybrany problem, czerwone flagi na górze. Pytania z układów, które się tu pojawiają, zapisują się też w swoich sekcjach. Ta część wykracza poza skrypt Lab-NUK: to standardowe pytania różnicujące, sprawdź je z prowadzącym.':s.must?'Zadaj każdej pacjentce, niezależnie od zgłaszanych dolegliwości.':s.sys?(F.rel.includes(s)?'Układ powiązany z wybranym problemem: dopytaj szczegółowo.':'Dodatkowo: zapytaj krótko, rozwiń przy dodatnich odpowiedziach.'):'';
  const u55=s.id==='uro'&&age()>=55?`Pacjent ma ≥55 lat: ${SEX()==='K'?'zapytaj o nietrzymanie moczu':SEX()==='M'?'zapytaj o trudności z oddawaniem moczu':'zapytaj kobiety o nietrzymanie, mężczyzn o trudności z oddawaniem moczu'} niezależnie od dolegliwości.`:'';
  return `<div class="sechead"><h1>${esc(s.t)}<span class="en">${esc(s.en)}</span></h1>${bulkHTML(s)}</div>
  ${lead?`<p class="lead">${lead}</p>`:''}${u55?`<p class="lead">${u55}</p>`:''}
+ ${s.pw&&s.pw.id==='psych'?psySafety():''}${s.id==='physio'?psyToggle():''}
  ${s.sp==='intro'?introHTML():s.sp==='cc'?ccHTML():s.sp==='meds'?medsHTML():''}
  <div class="rows">${s.items.map(itemHTML).join('')}</div>
  ${calcsBlock(s.pw?PCALC[s.pw.id]:SCALC[s.id])}
@@ -1226,8 +1295,8 @@ document.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)r
  if(ds.v){view(ds.v);return}
  if(ds.view){view(ds.view);return}
  if(ds.go){go(ds.go);return}
- if(ds.crit){const[id,k]=ds.crit.split('|'),st=cst(id);st[k]=!st[k];save();recalc(id);return}
- if(ds.cro){const[id,k]=ds.cro.split('|'),st=cst(id);st[k]=st[k]===ds.o?null:ds.o;save();recalc(id);return}
+ if(ds.crit){const[id,k]=ds.crit.split('|'),st=cst(id);st[k]=!st[k];save();recalc(id);if(id==='cssrs'&&$('psysafe'))renderSec();return}
+ if(ds.cro){const[id,k]=ds.cro.split('|'),st=cst(id);st[k]=st[k]===ds.o?null:ds.o;save();recalc(id);if(id==='cssrs'&&$('psysafe'))renderSec();return}
  if(ds.chip){const key=ds.chip,o=ds.o;let arr=getArr(key).slice();arr=arr.includes(o)?arr.filter(x=>x!==o):ds.s?[o]:arr.concat(o);setArr(key,arr);
   const r=key.split('|');
   if(r[0]==='i'&&ITEMS[r[1]].k==='yn'&&arr.length&&!ans(r[1]).v){setA(r[1],{v:'+',o:1});save();rerow(r[1]);rehead();renderNav();return}
@@ -1239,12 +1308,14 @@ document.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)r
   if(r[0]==='a')renderTop();
   renderNav();return}
  if(ds.alg){const i=d.all.findIndex(x=>x.n===ds.alg);if(i>=0)d.all.splice(i,1);else d.all.push({n:ds.alg,r:[]});d.noAll=false;save();renderSec();renderNav();renderTop();return}
- if(ds.yn){const a=ans(ds.yn),v=a.v===ds.val?'':ds.val;setA(ds.yn,{v,o:v==='+'?1:a.o});save();rerow(ds.yn);rehead();renderNav();return}
+ if(ds.yn){const a=ans(ds.yn),v=a.v===ds.val?'':ds.val;setA(ds.yn,{v,o:v==='+'?1:a.o});save();rerow(ds.yn);rehead();renderNav();if(/^ps/.test(ds.yn)&&$('psysafe'))$('psysafe').outerHTML=psySafety().split('\n')[0];return}
  if(ds.tog){const a=ans(ds.tog),op=!(b.getAttribute('aria-expanded')==='true');setA(ds.tog,{o:op?1:0});const r=document.querySelector(`[data-row="${ds.tog}"]`);if(r){r.querySelector('.det').hidden=!op;b.setAttribute('aria-expanded',op)}save();return}
  if(ds.addnote){setA(ds.addnote,{nOpen:1});const id=ds.addnote;b.outerHTML=noteHTML(id,'',ITEMS[id]?ITEMS[id].t:'');const t=$('n-'+id);if(t)t.focus();return}
  if(ds.pnadd){const k=ds.pnadd;d.p[k+'_o']=1;b.outerHTML=pNote(k);const t=$('pn-'+k);if(t)t.focus();save();return}
  if(ds.ccnote){d.cc[ds.ccnote].nOpen=1;renderSec();const t=$(`cc-${ds.ccnote}-n`);if(t)t.focus();return}
  const act=ds.act;if(!act)return;
+ if(act==='psyon'){d.psych=1;save();renderNav();go('pw-psych');return}
+ if(act==='psyoff'){d.psych=0;save();renderSec();renderNav();return}
  if(act==='bulk'){const s=SB(ds.s);const ids=secItems(s).filter(i=>i.k==='yn'&&!ans(i.id).v).map(i=>i.id);ids.forEach(id=>setA(id,{v:'-'}));BULK={sec:s.id,ids};save();renderSec();renderNav();return}
  if(act==='undo'){if(BULK)BULK.ids.forEach(id=>setA(id,{v:''}));BULK=null;save();renderSec();renderNav();return}
  if(act==='addcc'){d.cc.push({});save();renderSec();renderNav()}
@@ -1261,7 +1332,7 @@ document.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)r
  if(act==='del'){if(delArm!==ds.id){delArm=ds.id;b.textContent='Na pewno usunąć?';return}delArm=null;DB.list=DB.list.filter(x=>x.id!==ds.id);if(!DB.list.length)DB.list.push(blank());if(!DB.list.some(x=>x.id===DB.cur))DB.cur=DB.list[0].id;persist();renderList();renderTop()}
 });
 $('regen').onclick=renderSum;
-const APPV='2026-11-22.9',APPDATE='22.11.2026';
+const APPV='2026-11-24.1',APPDATE='24.11.2026';
 const ioMsg=t=>{$('iomsg').textContent=t};
 const exportAll=async()=>{const data={app:'wywiad-labnuk',format:1,exported:new Date().toISOString(),list:DB.list};
  const name=`wywiady-${new Date().toISOString().slice(0,10)}.json`;const blob=new Blob([JSON.stringify(data,null,1)],{type:'application/json'});
