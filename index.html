@@ -743,6 +743,64 @@ const PATHS=[
    Y('wy6','Nowe kosmetyki, detergenty, kontakt z roślinami lub zwierzętami'),
    Y('wy7','Podobne zmiany u domowników'),
    'st6','o7','k1','r13']},
+ {id:'pamiec',label:'zaburzenia pamięci',title:'zaburzenia pamięci i funkcji poznawczych',sys:['neuro'],
+  alts:[{label:'splątanie',C:'dezorientacja|zaburzenia uwagi|nadmierna senność|pobudzenie|omamy|niespójna mowa',O:'dziś|wczoraj|2–7 dni|1–4 tyg.|>1 mies.',C2:[['Przebieg w ciągu doby','stały|zmienny, z poprawami|gorzej wieczorem i w nocy',1]]}],
+  O:'<1 mies.|1–6 mies.|6–12 mies.|1–2 lata|>2 lata',
+  C:'pamięć świeża|pamięć odległa|mowa, znajdowanie słów|orientacja|planowanie, organizacja|obsługa urządzeń|zachowanie, osobowość',
+  C2:[['Dynamika','powoli postępująca|skokowe pogorszenia|wahania z dnia na dzień|stała|poprawa',1]],
+  T:'stały|narastający|zmienny w ciągu dnia|epizodyczny',noT2:1,
+  A:'obniżony nastrój|apatia|lęk|drażliwość|zaburzenia snu|omamy|zaburzenia chodu|upadki|nietrzymanie moczu|zaburzenia mowy|brak',
+  E:'stres|zmęczenie|wieczór|infekcja|nowe miejsce|nowy lek|alkohol',L:'odpoczynek|znane otoczenie|notatki, kalendarz|pomoc bliskich|nic',
+  items:[G('Czerwone flagi'),
+   RF('mm1','Nagły początek lub gwałtowne pogorszenie (godziny–dni)','myśl o majaczeniu, udarze, krwiaku, zakażeniu'),
+   RF('mm2','Wahania przytomności i uwagi w ciągu doby, senność lub pobudzenie','typowe dla majaczenia (delirium), wykonaj 4AT'),
+   RF('mm3','Szybkie narastanie w ciągu tygodni–miesięcy','np. guz, zapalenie mózgu, choroba prionowa, przyczyna metaboliczna'),
+   RF('mm4','Ogniskowe objawy neurologiczne','',{q:[Q('Które','niedowład|zaburzenia mowy|asymetria twarzy|zaburzenia widzenia|niezborność|drgawki')]}),
+   RF('mm5','Uraz głowy lub upadek w ostatnich miesiącach','przewlekły krwiak podtwardówkowy, zwłaszcza przy lekach przeciwkrzepliwych'),
+   RF('mm6','Gorączka, silny ból głowy, sztywność karku'),
+   RF('mm7','Zaburzenia chodu i nietrzymanie moczu','z otępieniem: triada wodogłowia normotensyjnego (NPH, normal pressure hydrocephalus)'),
+   RF('mm8','Początek objawów przed 65 r.ż.'),
+   G('Pamięć i inne funkcje poznawcze'),
+   Y('mm10','Pamięć świeża: zapominanie bieżących spraw','',0,{q:[Q('Które','gdzie odkłada przedmioty|umówione wizyty, terminy|treść rozmów|powtarza te same pytania|przyjęcie leków|niedawne wydarzenia')]}),
+   Y('mm11','Pamięć odległa: dawne wydarzenia, własna biografia','w otępieniu alzheimerowskim długo zachowana, zaburzona później'),
+   Y('mm12','Trudności z nazywaniem, znajdowaniem słów','',0,{q:[Q('Które','nazwiska znajomych|nazwy przedmiotów|gubi wątek rozmowy|trudności z rozumieniem')]}),
+   Y('mm13','Dezorientacja','',0,{q:[Q('Które','w czasie (data, dzień tygodnia)|w miejscu|zgubił(a) się w znanym miejscu')]}),
+   Y('mm14','Trudności z planowaniem, organizacją, liczeniem','',0,{q:[Q('Które','zakupy|pieniądze, rachunki|gotowanie|planowanie dnia')]}),
+   Y('mm15','Trudności z obsługą urządzeń','',0,{q:[Q('Które','telefon|pilot, telewizor|pralka|kuchenka|bankomat, karta')]}),
+   Y('mm16','Zaburzenia uwagi i koncentracji','',0,{q:[Q('','okresowe|stałe',1)]}),
+   Y('mm17','Trudności wzrokowo-przestrzenne','ocena odległości, ubieranie się, rozpoznawanie twarzy'),
+   G('Wywiad od rodziny (heteroanamneza)'),
+   O('mm20','Źródło informacji','',[Q('','pacjent|córka|syn|współmałżonek|inny członek rodziny|opiekun')]),
+   O('mm21','Wgląd pacjenta w problem','',[Q('','świadomy problemu|bagatelizuje|zaprzecza|rodzina bardziej zaniepokojona niż pacjent')]),
+   O('mm22','Co zauważyła rodzina','',[Q('','powtarza pytania|zapomina o wizytach|gubi przedmioty|zgubił(a) się|zmiana osobowości|wycofanie z kontaktów|podejrzliwość|zaniedbanie higieny|problemy z pieniędzmi|nic')]),
+   G('Funkcjonowanie na co dzień'),
+   O('mm25','Czynności złożone, IADL (instrumental activities of daily living): wymaga pomocy przy','',[Q('','zakupy|pieniądze, rachunki|leki|telefon|gotowanie|sprzątanie|dojazdy, komunikacja|prowadzenie samochodu|samodzielny(-a)')]),
+   O('mm26','Czynności podstawowe, ADL (activities of daily living): wymaga pomocy przy','pełna ocena: skala Barthel',[Q('','ubieranie|mycie, kąpiel|jedzenie|toaleta|kontrola zwieraczy|przemieszczanie się|samodzielny(-a)')]),
+   O('mm27','Kto pomaga','',[Q('','nikt|córka|syn|współmałżonek|inna rodzina|sąsiedzi|opiekunka|opieka środowiskowa')]),
+   Y('mm28','Zagrożenia bezpieczeństwa','',0,{q:[Q('Które','gubienie się|zostawia włączony gaz lub wodę|prowadzi samochód|upadki|oszustwa, wyłudzenia|nieregularne przyjmowanie leków')]}),
+   G('Objawy neuropsychiatryczne i różnicowanie'),
+   Y('mm30','Obniżony nastrój, utrata zainteresowań','depresja może dawać zaburzenia poznawcze; rozważ PHQ-2 lub wywiad psychiatryczny'),
+   Y('mm31','Apatia, wycofanie z dotychczasowych aktywności'),
+   Y('mm32','Zmiana osobowości, odhamowanie, nietaktowne zachowania','wczesne i dominujące: myśl o otępieniu czołowo-skroniowym'),
+   Y('mm33','Omamy wzrokowe','np. otępienie z ciałami Lewy’ego (DLB, dementia with Lewy bodies), majaczenie, leki'),
+   Y('mm34','Urojenia, podejrzliwość','',0,{q:[Q('Które','okradania|zdrady|prześladowcze|inne')]}),
+   Y('mm35','Gwałtowne ruchy we śnie, „odgrywanie snów”','zaburzenia zachowania w fazie REM (RBD, REM sleep behaviour disorder)'),
+   Y('mm36','Spowolnienie ruchowe, drżenie, sztywność','parkinsonizm'),
+   Y('mm37','Niepokój, błądzenie, odwrócenie rytmu dobowego'),
+   G('Czynniki naczyniowe'),
+   O('mm40','Czynniki ryzyka naczyniowego','',[Q('','nadciśnienie tętnicze|cukrzyca|hipercholesterolemia|palenie tytoniu|migotanie przedsionków|choroba wieńcowa|udar mózgu|TIA (przemijający napad niedokrwienny)|otyłość|brak')]),
+   G('Odwracalne i współistniejące przyczyny'),
+   Y('mm42','Leki mogące pogarszać funkcje poznawcze','',0,{q:[Q('Które','benzodiazepiny|leki nasenne|leki przeciwhistaminowe I generacji|trójpierścieniowe leki przeciwdepresyjne|leki na pęcherz nadreaktywny (antycholinergiczne)|opioidy|leki przeciwpadaczkowe|leki przeciwpsychotyczne|glikokortykosteroidy|nowy lek w ostatnim czasie|≥5 leków')]}),
+   Y('mm43','Epizody hipoglikemii','insulina, pochodne sulfonylomocznika'),
+   Y('mm44','Objawy niedoczynności tarczycy','',0,{q:[Q('Które','senność|marznięcie|przyrost masy ciała|zaparcia|suchość skóry|rozpoznana choroba tarczycy')]}),
+   Y('mm45','Ryzyko niedoboru witaminy B12','',0,{q:[Q('Które','długotrwale metformina|IPP (inhibitory pompy protonowej)|dieta wegańska|resekcja żołądka|niedokrwistość|drętwienie stóp')]}),
+   Y('mm46','Niedosłuch lub niedowidzenie','',0,{q:[Q('Które','niedosłuch|aparat słuchowy|zaćma|słabe widzenie')]}),
+   Y('mm47','Nadużywanie alkoholu','niedobór tiaminy, zespół Korsakowa'),
+   Y('mm48','Chrapanie, bezdechy w nocy, senność w dzień','obturacyjny bezdech senny'),
+   Y('mm49','Ostatnio: infekcja, odwodnienie, zaparcie, zatrzymanie moczu, ból, hospitalizacja','czynniki wyzwalające majaczenie'),
+   G('Tło'),
+   O('mm50','Wykształcenie','do interpretacji testów przesiewowych',[Q('','podstawowe|zawodowe|średnie|wyższe',1)]),
+   Y('mm51','Otępienie w rodzinie','',0,{q:[Q('Kto','matka|ojciec|rodzeństwo|inni'),Q('','początek przed 65 r.ż.')]})]},
  {id:'psych',label:'obniżony nastrój',title:'psychiatryczny',sys:[],
   alts:[{label:'lęk',C:'stały niepokój|napady paniki|lęk w określonych sytuacjach|zamartwianie się'},{label:'myśli samobójcze',C:'bierne (życzenie śmierci)|czynne|z planem|z zamiarem realizacji'}],
   C:'smutek|pustka|drażliwość|apatia|beznadzieja',
@@ -818,13 +876,13 @@ const chosen=()=>{const s=[];cur().cc.forEach(c=>{const p=pathOf(c);if(p&&p.item
 const ccGroups=c=>{const P=cfgOf(c),g=[];const a=(k,L,l,o,s,x)=>g.push(Object.assign({k,L,l,o:o.split('|'),s:!!s},x||{}));
  if(!P)return g;
  if(P.S)a('S','S',P.Sg?'Okolica brzucha':'Umiejscowienie',P.S,0,{g:P.Sg||''});
- a('O','O','Początek',ONSET,1);a('O2','','Jak się zaczęło','nagle|stopniowo',1);
+ a('O','O','Początek',P.O||ONSET,1);a('O2','','Jak się zaczęło','nagle|stopniowo',1);
  if(P.C)a('C','C','Charakter',P.C);
  (P.C2||[]).forEach((x,n)=>a('C'+(n+2),'',x[0],x[1],x[2]));
  if(P.R)a('R','R','Promieniowanie',P.R);
- a('A','A','Objawy towarzyszące',ASSOC);
- a('T','T','Przebieg w czasie','stały|napadowy|nawracający|narastający|ustępujący');
- a('T2','','Pojedynczy epizod trwa','sekundy|<5 min|5–20 min|godziny|cały czas',1);
+ a('A','A','Objawy towarzyszące',P.A||ASSOC);
+ a('T','T','Przebieg w czasie',P.T||'stały|napadowy|nawracający|narastający|ustępujący');
+ if(!P.noT2)a('T2','','Pojedynczy epizod trwa','sekundy|<5 min|5–20 min|godziny|cały czas',1);
  a('T3','','Pora','rano|w dzień|wieczorem|w nocy|bez związku');
  a('E','E','Nasila',P.E||WORSE);a('E2','','Łagodzi',P.L||BETTER);
  if(P.nrs)a('V','S','Nasilenie, NRS (Numeric Rating Scale)','0|1|2|3|4|5|6|7|8|9|10',1,{g:'nrs'});
@@ -985,11 +1043,18 @@ const CALCS={
  gad7:{n:'GAD-7 (Generalized Anxiety Disorder-7), nasilenie lęku',h:'Ostatnie 2 tygodnie: jak często dokuczały pacjentowi poniższe problemy.',c:[
   ...['Zdenerwowanie, lęk lub napięcie','Niemożność powstrzymania lub kontrolowania zamartwiania się','Nadmierne zamartwianie się różnymi sprawami','Trudności z odprężeniem się','Niepokój ruchowy, trudność z usiedzeniem w miejscu','Łatwe irytowanie się, drażliwość','Lęk, że może się wydarzyć coś okropnego'].map((l,i)=>({k:'q'+(i+1),l:(i+1)+'. '+l,o:[['wcale',0],['kilka dni',1],['ponad połowę dni',2],['niemal codziennie',3]]}))],
   r:s=>(s<=4?'minimalny lęk':s<=9?'łagodny lęk':s<=14?'umiarkowany lęk':'ciężki lęk')+(s>=10?'; ≥10 pkt: wskazana dalsza diagnostyka zaburzeń lękowych':'')},
+ fourat:{n:'4AT – przesiew w kierunku majaczenia i zaburzeń poznawczych',h:'Ok. 2 minuty, bez szkolenia. Wynik nie jest rozpoznaniem: dodatni wymaga oceny klinicznej.',c:[
+  {k:'a',l:'1. Przytomność (alertness): wyraźnie senny(-a) lub pobudzony(-a) w trakcie oceny',o:[['prawidłowa',0],['krótka senność <10 s po obudzeniu',0],['wyraźnie nieprawidłowa',4]],src:'badanie'},
+  {k:'b',l:'2. AMT4: wiek, data urodzenia, miejsce (nazwa szpitala lub budynku), bieżący rok',o:[['bez błędów',0],['1 błąd',1],['≥2 błędy lub nie da się zbadać',2]],src:'badanie'},
+  {k:'c',l:'3. Uwaga: miesiące wstecz od grudnia',o:[['≥7 miesięcy poprawnie',0],['<7 lub odmawia',1],['nie da się zbadać',2]],src:'badanie'},
+  {k:'d',l:'4. Ostra zmiana lub zmienny przebieg w ostatnich 2 tygodniach, nadal widoczne w ostatnich 24 h',ch:'czujność, funkcje poznawcze, inne funkcje psychiczne (np. podejrzliwość, omamy); zapytaj rodzinę',o:[['nie',0],['tak',4]]}],
+  r:s=>s>=4?'możliwe majaczenie ± zaburzenia poznawcze: pilna ocena kliniczna, szukaj przyczyny':s>=1?'możliwe zaburzenia poznawcze: dalsza ocena (np. MoCA, MMSE)':'majaczenie i ciężkie zaburzenia poznawcze mało prawdopodobne (nie wyklucza łagodnych)'},
+ ad8:{n:'AD8 – wywiad od bliskiej osoby w kierunku otępienia',kind:'link',url:'https://knightadrc.wustl.edu/professionals/ad8-instrument/',h:'8 pytań do bliskiej osoby o zmianę w ostatnich latach (osąd, zainteresowania, powtarzanie, obsługa urządzeń, miesiąc i rok, finanse, wizyty, codzienne problemy z myśleniem). 0–1 pkt: prawidłowo, ≥2 pkt: prawdopodobne zaburzenia poznawcze. Licencja zabrania modyfikowania kwestionariusza, więc nie ma go w aplikacji w moim tłumaczeniu: użyj oryginalnego formularza.'},
  mmrc:{n:'Skala duszności mMRC (modified Medical Research Council)',c:[
   {k:'s',l:'Stopień duszności',o:[['0: tylko przy dużym wysiłku',0],['1: przy szybkim marszu po płaskim lub pod niewielkie wzniesienie',1],['2: chodzi wolniej niż rówieśnicy lub musi się zatrzymywać',2],['3: zatrzymuje się po ok. 100 m lub kilku minutach marszu',3],['4: nie wychodzi z domu, duszność przy ubieraniu',4]]}],
   r:s=>s>=2?'duszność istotna (≥2): w POChP (przewlekłej obturacyjnej chorobie płuc) kwalifikuje do grupy z większym nasileniem objawów wg GOLD':'mniej nasilona duszność'}
 };
-const PCALC={psych:['cssrs','phq9','gad7','auditc'],klatka:['marburg','cadptl','wellsPE','geneva'],dusznosc:['wellsPE','geneva','mmrc','crb65'],kaszel:['crb65','mcisaac'],brzuch:['alvarado'],zum:['qsofa'],glowa:['ottawa','gcaps'],zawroty:['abcd2'],kolatanie:['cha2ds2va','hasbled'],goraczka:['qsofa','crb65'],obrzeki:['wellsDVT'],oslabienie:['abcd2','phq2','barthel','stopbang']};
+const PCALC={pamiec:['fourat','ad8','barthel','phq2','auditc'],psych:['cssrs','phq9','gad7','auditc'],klatka:['marburg','cadptl','wellsPE','geneva'],dusznosc:['wellsPE','geneva','mmrc','crb65'],kaszel:['crb65','mcisaac'],brzuch:['alvarado'],zum:['qsofa'],glowa:['ottawa','gcaps'],zawroty:['abcd2'],kolatanie:['cha2ds2va','hasbled'],goraczka:['qsofa','crb65'],obrzeki:['wellsDVT'],oslabienie:['abcd2','phq2','barthel','stopbang']};
 const SCALC={subst:['auditc'],physio:['bmi','phq2','stopbang']};
 const cx=()=>{const d=cur(),b=d.calc&&d.calc.bmi?bmiOf(d.calc.bmi):null;return{age:age(),sex:SEX(),bmi:b?b.b:null}};
 const cst=id=>{const d=cur();d.calc=d.calc||{};return d.calc[id]=d.calc[id]||{}};
@@ -1005,7 +1070,7 @@ const calcRes=id=>{const C=CALCS[id],st=cst(id),x=cx();
  return{s,score:fnum(s)+' '+(C.unit||'pkt'),txt:anyOpt?C.r(s,x,v,n):'zaznacz odpowiedzi we wszystkich pytaniach z wyborem',touched,complete:anyOpt}};
 const SRC={badanie:'badanie',lab:'laboratorium'};
 const calcHTML=id=>{const C=CALCS[id],st=cst(id),x=cx(),R=calcRes(id);
- if(C.kind==='link')return `<div class="calc" data-calc="${id}"><div class="chd"><b>${esc(C.n)}</b><a class="btn ghost" href="${C.url}" target="_blank" rel="noopener">Otwórz na mp.pl ↗</a></div><p class="hint" style="margin:0">${esc(C.h)}</p></div>`;
+ if(C.kind==='link')return `<div class="calc" data-calc="${id}"><div class="chd"><b>${esc(C.n)}</b><a class="btn ghost" href="${C.url}" target="_blank" rel="noopener">${/mp\.pl/.test(C.url)?'Otwórz na mp.pl':'Otwórz źródło'} ↗</a></div><p class="hint" style="margin:0">${esc(C.h)}</p></div>`;
  let body='';
  if(C.kind==='bmi')body=`<div class="flds"><label class="f">Masa ciała (kg)<input type="number" inputmode="decimal" data-bmi="w" value="${esc(st.w||'')}"></label><label class="f">Wzrost (cm)<input type="number" inputmode="decimal" data-bmi="h" value="${esc(st.h||'')}"></label></div>`;
  else body=`<div class="critl">${C.c.map(c=>{const r=critVal(C,c,st,x),tag=c.src?`<span class="badge">${SRC[c.src]}</span>`:'';
@@ -1332,7 +1397,7 @@ document.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)r
  if(act==='del'){if(delArm!==ds.id){delArm=ds.id;b.textContent='Na pewno usunąć?';return}delArm=null;DB.list=DB.list.filter(x=>x.id!==ds.id);if(!DB.list.length)DB.list.push(blank());if(!DB.list.some(x=>x.id===DB.cur))DB.cur=DB.list[0].id;persist();renderList();renderTop()}
 });
 $('regen').onclick=renderSum;
-const APPV='2026-11-24.1',APPDATE='24.11.2026';
+const APPV='2026-11-25.1',APPDATE='25.11.2026';
 const ioMsg=t=>{$('iomsg').textContent=t};
 const exportAll=async()=>{const data={app:'wywiad-labnuk',format:1,exported:new Date().toISOString(),list:DB.list};
  const name=`wywiady-${new Date().toISOString().slice(0,10)}.json`;const blob=new Blob([JSON.stringify(data,null,1)],{type:'application/json'});
